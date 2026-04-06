@@ -1,0 +1,22 @@
+{
+  "name": "floripa-alagamentos-backend",
+  "version": "1.0.0",
+  "description": "Backend para monitoramento de alagamentos em Florianópolis",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.5.1",
+    "express-session": "^1.19.0",
+    "googleapis": "^171.4.0",
+    "helmet": "^7.1.0",
+    "node-sqlite3-wasm": "^0.8.28"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
