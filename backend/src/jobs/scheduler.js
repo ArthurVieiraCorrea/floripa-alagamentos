@@ -1,18 +1,20 @@
 'use strict';
 // scheduler.js
-// Inicializa o job cron de previsão meteorológica.
+// Inicializa os jobs cron de previsão meteorológica e motor de risco.
 // PREV-03: executa fetchAndCacheForecasts() automaticamente a cada 1h.
+// RISCO-03: recalcula risk scores a cada 4h (offset 5min garante forecast atualizado).
 // Padrão singleton: guard 'initialized' previne double-scheduling.
 
 const cron = require('node-cron');
 const { fetchAndCacheForecasts } = require('../services/forecastService');
+const { calcularRiscos } = require('../services/riskEngine');
 
 let initialized = false;
 
 /**
- * Inicializa o scheduler de forecast.
+ * Inicializa o scheduler de forecast e risco.
  * Deve ser chamado APÓS initSchema() ter rodado (i.e., após app.use(session(...))).
- * Roda fetchAndCacheForecasts() imediatamente no startup para warm-up do cache.
+ * Roda fetchAndCacheForecasts() + calcularRiscos() imediatamente no startup (encadeado).
  */
 function initScheduler() {
   if (initialized) {
@@ -29,13 +31,28 @@ function initScheduler() {
     timezone: 'America/Sao_Paulo',
   });
 
-  console.log('[scheduler] Job de previsão agendado (a cada hora em :00)');
+  // RISCO-03: recalcular scores a cada 4h (offset de 5min garante forecast já atualizado)
+  cron.schedule('5 */4 * * *', async () => {
+    console.log('[scheduler] Recalculando risk scores...');
+    await calcularRiscos();
+  });
 
-  // Warm-up: executar imediatamente no startup para que o cache esteja disponível
-  // antes da primeira requisição. Fire-and-forget (sem await) — app.listen não bloqueia.
-  fetchAndCacheForecasts().catch(err =>
-    console.error('[scheduler] Warm-up inicial falhou (cache permanece stale):', err.message)
-  );
+  console.log('[scheduler] Jobs iniciados. Forecast: 0 * * * * | Risco: 5 */4 * * *');
+
+  // Executar imediatamente na inicialização — encadeado para garantir ordem:
+  // forecast primeiro, depois risco (evita calcularRiscos com cache vazio)
+  (async () => {
+    try {
+      await fetchAndCacheForecasts();
+    } catch (err) {
+      console.error('[scheduler] Erro na busca inicial de forecast:', err.message);
+    }
+    try {
+      await calcularRiscos();
+    } catch (err) {
+      console.error('[scheduler] Erro no cálculo inicial de risco:', err.message);
+    }
+  })();
 }
 
 module.exports = { initScheduler };
