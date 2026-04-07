@@ -27,6 +27,8 @@ const WasmSQLiteStore = require('./middleware/session');
 const authRouter   = require('./routes/auth');
 
 const ocorrenciasRouter = require('./routes/ocorrencias');
+const previsaoRouter    = require('./routes/previsao');
+const { startScheduler } = require('./jobs/scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -54,6 +56,7 @@ app.use('/api/auth',  authRouter);   // REST endpoint (/api/auth/me) — same ro
 
 // Rotas da API
 app.use('/api/ocorrencias', ocorrenciasRouter);
+app.use('/api/previsao',    previsaoRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -80,6 +83,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
+  startScheduler();
 });
 
 module.exports = app;
