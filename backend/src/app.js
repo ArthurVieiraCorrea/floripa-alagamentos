@@ -22,6 +22,9 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const session      = require('express-session');
+const WasmSQLiteStore = require('./middleware/session');
+const authRouter   = require('./routes/auth');
 
 const ocorrenciasRouter = require('./routes/ocorrencias');
 
@@ -31,6 +34,23 @@ const PORT = process.env.PORT || 3001;
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
+
+app.use(session({
+  store: new WasmSQLiteStore(),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod; http in dev
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  },
+  name: 'floripa.sid', // custom name reduces fingerprinting vs default 'connect.sid'
+}));
+
+app.use('/auth',      authRouter);   // Google OAuth flow (/auth/google, /auth/google/callback, /auth/logout)
+app.use('/api/auth',  authRouter);   // REST endpoint (/api/auth/me) — same router, two mount points
 
 // Rotas da API
 app.use('/api/ocorrencias', ocorrenciasRouter);

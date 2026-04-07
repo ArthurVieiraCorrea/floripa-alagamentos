@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Floripa Alagamentos</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body>
+  <!-- Auth state display — shown/hidden by main.js based on /api/auth/me response -->
+  <div id="auth-container" style="position:absolute;top:1rem;right:1rem;z-index:1000;">
+    <a id="btn-login" href="/auth/google"
+       style="display:none;padding:.5rem 1rem;background:#4285f4;color:#fff;border-radius:4px;text-decoration:none;">
+      Entrar com Google
+    </a>
+    <span id="user-info" style="display:none;align-items:center;gap:.75rem;">
+      <span id="user-nome" style="font-weight:600;"></span>
+      <a href="/auth/logout"
+         style="padding:.4rem .8rem;background:#e53935;color:#fff;border-radius:4px;text-decoration:none;font-size:.875rem;">
+        Sair
+      </a>
+    </span>
+  </div>
+
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1>Floripa Alagamentos</h1>
+        <p class="subtitle">Monitoramento em tempo real — Florianópolis/SC</p>
+      </div>
+      <div id="stats-bar" class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-total">—</span>
+          <span class="stat-label">Ocorrências (24h)</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value stat-critico" id="stat-critico">—</span>
+          <span class="stat-label">Crítico</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value stat-alto" id="stat-alto">—</span>
+          <span class="stat-label">Alto</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value stat-medio" id="stat-medio">—</span>
+          <span class="stat-label">Médio</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value stat-baixo" id="stat-baixo">—</span>
+          <span class="stat-label">Baixo</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-bairros">—</span>
+          <span class="stat-label">Bairros afetados</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main layout -->
+    <main class="layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-tab="registrar">Registrar</button>
+          <button class="tab" data-tab="historico">Histórico</button>
+        </div>
+
+        <!-- Registrar -->
+        <div class="tab-content active" id="tab-registrar">
+          <h2>Nova Ocorrência</h2>
+          <p class="hint">Clique no mapa para definir a localização ou preencha as coordenadas.</p>
+          <form id="form-ocorrencia">
+            <div class="field">
+              <label>Latitude</label>
+              <input type="number" id="lat" name="latitude" step="any" placeholder="-27.5954" required />
+            </div>
+            <div class="field">
+              <label>Longitude</label>
+              <input type="number" id="lng" name="longitude" step="any" placeholder="-48.5480" required />
+            </div>
+            <div class="field">
+              <label>Bairro</label>
+              <input type="text" id="bairro" name="bairro" placeholder="Ex: Centro" required />
+            </div>
+            <div class="field">
+              <label>Nível</label>
+              <select id="nivel" name="nivel" required>
+                <option value="">Selecione...</option>
+                <option value="baixo">Baixo</option>
+                <option value="medio">Médio</option>
+                <option value="alto">Alto</option>
+                <option value="critico">Crítico</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Descrição (opcional)</label>
+              <textarea id="descricao" name="descricao" rows="3" placeholder="Detalhes da ocorrência..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Registrar Ocorrência</button>
+            <div id="form-msg" class="form-msg"></div>
+          </form>
+        </div>
+
+        <!-- Histórico -->
+        <div class="tab-content" id="tab-historico">
+          <h2>Histórico</h2>
+          <div class="filtros">
+            <select id="filtro-nivel">
+              <option value="">Todos os níveis</option>
+              <option value="critico">Crítico</option>
+              <option value="alto">Alto</option>
+              <option value="medio">Médio</option>
+              <option value="baixo">Baixo</option>
+            </select>
+            <input type="text" id="filtro-bairro" placeholder="Filtrar por bairro..." />
+            <button id="btn-filtrar" class="btn-secondary">Filtrar</button>
+          </div>
+          <div id="lista-ocorrencias" class="lista-ocorrencias">
+            <p class="loading">Carregando...</p>
+          </div>
+          <div id="paginacao" class="paginacao"></div>
+        </div>
+      </aside>
+
+      <!-- Map -->
+      <div id="map"></div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
