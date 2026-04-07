@@ -84,6 +84,31 @@ function initSchema(db) {
   `);
 
   db.run(`INSERT OR IGNORE INTO forecasts_meta(id) VALUES(1)`);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS risk_scores (
+      id                           INTEGER PRIMARY KEY AUTOINCREMENT,
+      bairro                       TEXT    NOT NULL,
+      window_hours                 INTEGER NOT NULL CHECK(window_hours IN (24, 48, 72)),
+      score                        REAL    NOT NULL,
+      nivel                        TEXT    NOT NULL CHECK(nivel IN ('verde', 'amarelo', 'laranja', 'vermelho')),
+      precipitacao_prevista_mm     REAL    NOT NULL DEFAULT 0,
+      ocorrencias_historicas_count INTEGER NOT NULL DEFAULT 0,
+      insufficient_data            INTEGER NOT NULL DEFAULT 0,
+      calculated_at                TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(bairro, window_hours)
+    )
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_risk_scores_bairro_window
+      ON risk_scores(bairro, window_hours)
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_risk_scores_window
+      ON risk_scores(window_hours)
+  `);
 }
 
 module.exports = { getDb };
