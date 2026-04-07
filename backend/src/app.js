@@ -62,9 +62,15 @@ app.get('/api/health', (req, res) => {
 
 // Serve o frontend em produção
 const frontendDist = path.join(__dirname, '../../frontend/dist');
+const fs = require('fs');
 app.use(express.static(frontendDist));
 app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendDist, 'index.html'));
+  const indexPath = path.join(frontendDist, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ erro: 'Frontend não compilado. Execute: cd frontend && npm run build' });
+  }
 });
 
 app.use((err, req, res, next) => {
