@@ -54,6 +54,36 @@ function initSchema(db) {
       expires INTEGER NOT NULL
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS forecasts (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      bairro          TEXT    NOT NULL DEFAULT 'florianopolis',
+      forecast_time   TEXT    NOT NULL,
+      precipitacao_mm REAL    NOT NULL DEFAULT 0,
+      fonte           TEXT    NOT NULL DEFAULT 'open-meteo',
+      fetched_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(bairro, forecast_time)
+    )
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_forecasts_bairro_time
+      ON forecasts(bairro, forecast_time)
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS forecasts_meta (
+      id              INTEGER PRIMARY KEY DEFAULT 1,
+      last_fetched_at TEXT,
+      status          TEXT    NOT NULL DEFAULT 'pending'
+                              CHECK(status IN ('ok', 'error', 'pending')),
+      precip_48h_mm   REAL    NOT NULL DEFAULT 0,
+      last_error      TEXT
+    )
+  `);
+
+  db.run(`INSERT OR IGNORE INTO forecasts_meta(id) VALUES(1)`);
 }
 
 module.exports = { getDb };
