@@ -28,7 +28,7 @@ const authRouter   = require('./routes/auth');
 
 const ocorrenciasRouter = require('./routes/ocorrencias');
 const previsaoRouter    = require('./routes/previsao');
-const { startScheduler } = require('./jobs/scheduler');
+const { initScheduler } = require('./jobs/scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -81,9 +81,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ erro: 'Erro interno do servidor' });
 });
 
+// Inicializa scheduler de previsão meteorológica APÓS session middleware (initSchema já rodou)
+initScheduler();
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
-  startScheduler();
 });
 
 module.exports = app;

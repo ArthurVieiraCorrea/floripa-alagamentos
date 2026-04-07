@@ -1,28 +1,41 @@
 'use strict';
 // scheduler.js
-// Inicializa jobs cron para atualização periódica de dados.
-// PREV-02: Forecast nunca é buscado em request de usuário — apenas pelo scheduler.
+// Inicializa o job cron de previsão meteorológica.
+// PREV-03: executa fetchAndCacheForecasts() automaticamente a cada 1h.
+// Padrão singleton: guard 'initialized' previne double-scheduling.
 
 const cron = require('node-cron');
 const { fetchAndCacheForecasts } = require('../services/forecastService');
 
+let initialized = false;
+
 /**
- * Inicia todos os jobs agendados.
- * Chamado uma única vez em app.js na inicialização.
+ * Inicializa o scheduler de forecast.
+ * Deve ser chamado APÓS initSchema() ter rodado (i.e., após app.use(session(...))).
+ * Roda fetchAndCacheForecasts() imediatamente no startup para warm-up do cache.
  */
-function startScheduler() {
-  // Busca previsão todo início de hora (PREV-03: atualização automática a cada 1h)
+function initScheduler() {
+  if (initialized) {
+    console.warn('[scheduler] Já inicializado — ignorando chamada duplicada');
+    return;
+  }
+  initialized = true;
+
+  // '0 * * * *' = ao minuto 0 de cada hora (expressão cron de 5 campos)
   cron.schedule('0 * * * *', async () => {
-    console.log('[scheduler] Iniciando atualização de forecast...');
+    console.log('[scheduler] Executando fetch horário de previsão');
     await fetchAndCacheForecasts();
+  }, {
+    timezone: 'America/Sao_Paulo',
   });
 
-  // Executar imediatamente na inicialização para popular o cache antes do primeiro request
-  fetchAndCacheForecasts().catch(err =>
-    console.error('[scheduler] Erro na busca inicial de forecast:', err.message)
-  );
+  console.log('[scheduler] Job de previsão agendado (a cada hora em :00)');
 
-  console.log('[scheduler] Jobs iniciados. Forecast será atualizado a cada hora.');
+  // Warm-up: executar imediatamente no startup para que o cache esteja disponível
+  // antes da primeira requisição. Fire-and-forget (sem await) — app.listen não bloqueia.
+  fetchAndCacheForecasts().catch(err =>
+    console.error('[scheduler] Warm-up inicial falhou (cache permanece stale):', err.message)
+  );
 }
 
-module.exports = { startScheduler };
+module.exports = { initScheduler };
