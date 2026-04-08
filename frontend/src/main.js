@@ -15,6 +15,9 @@ const state = {
   geojsonBairros: null            // cache do fetch de bairros.geojson — fetch uma única vez
 };
 
+// Declarado aqui para estar disponível quando os controles forem inicializados (evita TDZ)
+let atualizarTimestamp = () => {};
+
 // ── Mapa ────────────────────────────────────────────────
 const map = iniciarMapa();
 
@@ -53,6 +56,8 @@ seletor.controle.addTo(map);
 atualizarTimestamp = seletor.atualizarTimestamp;
 
 map.on('click', (e) => {
+  // Em modo risco, cliques no mapa não capturam coordenadas (evita interferência com choropleth)
+  if (state.modoAtivo === 'risco') return;
   const { lat, lng } = e.latlng;
   document.getElementById('lat').value = lat.toFixed(6);
   document.getElementById('lng').value = lng.toFixed(6);
@@ -94,8 +99,6 @@ async function carregarMapa() {
 }
 
 // ── Mapa: camada de risco ───────────────────────────────
-// atualizarTimestamp é preenchido após criarControleSeletor() no init
-let atualizarTimestamp = () => {};
 
 async function carregarCamadaRisco() {
   try {

@@ -158,11 +158,12 @@ export function renderizarCamadaRisco(map, geojson, apiResp, camadaRef) {
     },
     onEachFeature(feature, layer) {
       const score = scoreMap.get(normalizarNomeLocal(feature.properties.NM_BAIRRO));
-      layer.on('click', () => {
+      layer.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
         const html = score
           ? formatarPopupBairro(feature.properties.NM_BAIRRO, score)
           : `<div style="min-width:200px"><div style="font-weight:700;font-size:.95rem;margin-bottom:6px">${feature.properties.NM_BAIRRO}</div><div style="font-size:.8rem;color:#94a3b8">Sem dados disponíveis</div></div>`;
-        layer.bindPopup(html).openPopup();
+        L.popup().setLatLng(e.latlng).setContent(html).openOn(map);
       });
     }
   }).addTo(map);
