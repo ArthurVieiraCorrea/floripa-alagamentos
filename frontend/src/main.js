@@ -1,16 +1,56 @@
 import { api } from './services/api.js';
-import { iniciarMapa, renderizarMarcadores } from './services/mapa.js';
+import { iniciarMapa, renderizarMarcadores, renderizarCamadaRisco, removerCamadaRisco } from './services/mapa.js';
+import { criarControleToggle, criarControleSeletor } from './services/controles.js';
 
 // ── Estado ──────────────────────────────────────────────
 const state = {
   marcadores: [],
   tempMarker: null,
   paginaAtual: 1,
-  filtros: { nivel: '', bairro: '' }
+  filtros: { nivel: '', bairro: '' },
+  // Phase 04 additions
+  camadaRisco: { layer: null },   // referência mutável para removeLayer sem acúmulo
+  modoAtivo: 'risco',             // 'risco' | 'ocorrencias' — D-03 default: risco
+  horizonteAtivo: 24,             // 24 | 48 | 72 — D-05 default: 24h
+  geojsonBairros: null            // cache do fetch de bairros.geojson — fetch uma única vez
 };
 
 // ── Mapa ────────────────────────────────────────────────
 const map = iniciarMapa();
+
+// ── Controles do mapa ────────────────────────────────────
+// D-03: Toggle Risco/Ocorrências
+criarControleToggle({
+  onModoChange(modo) {
+    state.modoAtivo = modo;
+    if (modo === 'risco') {
+      // D-04: remover marcadores, adicionar choropleth
+      state.marcadores.forEach(m => m.remove());
+      state.marcadores.length = 0;
+      carregarCamadaRisco();
+    } else {
+      // D-04: remover choropleth, adicionar marcadores
+      removerCamadaRisco(map, state.camadaRisco);
+      carregarMapa(); // usa a função existente de ocorrências
+    }
+  }
+}).addTo(map);
+
+// D-05: Seletor de Horizonte 24h/48h/72h
+const seletor = criarControleSeletor({
+  horizonteInicial: 24,
+  onHorizonteChange(window) {
+    state.horizonteAtivo = window;
+    // D-06: re-render choropleth sem recarregar página
+    // Seletor só afeta modo 'risco' (D-04 — em modo ocorrências os botões são no-op)
+    if (state.modoAtivo === 'risco') {
+      carregarCamadaRisco();
+    }
+  }
+});
+seletor.controle.addTo(map);
+// Expor função de atualização de timestamp para carregarCamadaRisco() usar (D-08)
+atualizarTimestamp = seletor.atualizarTimestamp;
 
 map.on('click', (e) => {
   const { lat, lng } = e.latlng;
@@ -50,6 +90,56 @@ async function carregarMapa() {
     renderizarMarcadores(map, recentes, state.marcadores);
   } catch (e) {
     console.error('Erro ao carregar mapa', e);
+  }
+}
+
+// ── Mapa: camada de risco ───────────────────────────────
+// atualizarTimestamp é preenchido após criarControleSeletor() no init
+let atualizarTimestamp = () => {};
+
+async function carregarCamadaRisco() {
+  try {
+    // Usar Promise.all para buscar GeoJSON (cacheado) e scores em paralelo
+    // GeoJSON já cacheado: retorna direto sem refetch
+    const [geojson, apiResp] = await Promise.all([
+      state.geojsonBairros
+        ? Promise.resolve(state.geojsonBairros)
+        : fetch('/bairros.geojson').then(r => {
+            if (!r.ok) throw new Error(`GeoJSON HTTP ${r.status}`);
+            return r.json();
+          }).then(data => { state.geojsonBairros = data; return data; }),
+      api.riscos(state.horizonteAtivo)
+    ]);
+    renderizarCamadaRisco(map, geojson, apiResp, state.camadaRisco);
+
+    // D-08: atualizar timestamp no controle de horizonte
+    // calculated_at vem da primeira linha de scores (todos têm o mesmo timestamp por cálculo batch)
+    if (apiResp.scores && apiResp.scores.length > 0 && apiResp.scores[0].calculated_at) {
+      const hora = new Date(apiResp.scores[0].calculated_at).toLocaleTimeString('pt-BR', {
+        hour: '2-digit', minute: '2-digit'
+      });
+      atualizarTimestamp(`Atualizado: ${hora}`);
+    } else {
+      atualizarTimestamp('Calculando...');
+    }
+  } catch (e) {
+    if (e.message && e.message.includes('503')) {
+      // Estado esperado antes do primeiro cálculo do cron — renderiza tudo cinza
+      // Garantir GeoJSON carregado mesmo no cold-start (Promise.all pode ter falhado na parte de scores)
+      if (!state.geojsonBairros) {
+        try {
+          state.geojsonBairros = await fetch('/bairros.geojson').then(r => r.json());
+        } catch (_) { /* GeoJSON indisponível — não renderiza cinza */ }
+      }
+      if (state.geojsonBairros) {
+        renderizarCamadaRisco(map, state.geojsonBairros, { scores: [] }, state.camadaRisco);
+      }
+      atualizarTimestamp('Calculando...');
+      console.info('Risk scores ainda calculando — renderizando bairros sem dados');
+    } else {
+      atualizarTimestamp('Erro ao carregar dados de risco. Recarregue a página.');
+      console.error('Erro ao carregar camada de risco', e);
+    }
   }
 }
 
@@ -208,8 +298,18 @@ async function carregarSessao() {
 
 // ── Init ─────────────────────────────────────────────────
 carregarStats();
-carregarMapa();
+// D-03: modo padrão é 'risco' — NÃO chamar carregarMapa() no startup para evitar estado misto (D-04)
+// carregarMapa() só é chamado quando o usuário clica [Ocorrências] no toggle
+carregarCamadaRisco(); // carrega choropleth no startup (modo padrão: risco)
 carregarSessao();
 
 // Auto-refresh a cada 60s
-setInterval(() => { carregarStats(); carregarMapa(); }, 60_000);
+// Inclui camada de risco apenas quando modo é 'risco' (D-04 — não re-renderizar em modo ocorrências)
+setInterval(() => {
+  carregarStats();
+  if (state.modoAtivo === 'risco') {
+    carregarCamadaRisco();
+  } else {
+    carregarMapa();
+  }
+}, 60_000);
