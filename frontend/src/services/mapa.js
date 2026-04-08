@@ -163,7 +163,7 @@ export function renderizarCamadaRisco(map, geojson, apiResp, camadaRef) {
         const html = score
           ? formatarPopupBairro(feature.properties.NM_BAIRRO, score)
           : `<div style="min-width:200px"><div style="font-weight:700;font-size:.95rem;margin-bottom:6px">${feature.properties.NM_BAIRRO}</div><div style="font-size:.8rem;color:#94a3b8">Sem dados disponíveis</div></div>`;
-        L.popup().setLatLng(e.latlng).setContent(html).openOn(map);
+        map.openPopup(html, e.latlng);
       });
     }
   }).addTo(map);
