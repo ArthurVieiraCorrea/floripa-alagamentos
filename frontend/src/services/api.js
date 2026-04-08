@@ -39,4 +39,7 @@ export const api = {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
+
+  riscos: (window = 24) =>
+    request(`/risco/bairros?window=${window}`),
 };
