@@ -6,6 +6,7 @@
 // RISCO-04: insufficient_data=true quando count < 5 ocorrências históricas.
 
 const { getDb } = require('../config/database');
+const { BAIRROS_FLORIANOPOLIS, normalizarNome } = require('../constants/bairros');
 
 // D-02: janelas de cálculo
 const WINDOW_HOURS = [24, 48, 72];
@@ -19,29 +20,6 @@ const HIST_SATURATION = 10;
 // D-04: threshold de dados insuficientes
 const INSUFFICIENT_THRESHOLD = 5;
 
-// D-01: Lista canônica de ~50 bairros oficiais de Florianópolis.
-// Nomes devem coincidir com properties.name do GeoJSON da Fase 4.
-// Fonte: Wikipedia — Lista de distritos e bairros de Florianópolis
-const BAIRROS_FLORIANOPOLIS = [
-  // Ilha — Norte
-  'Canasvieiras', 'Jurerê', 'Daniela', 'Ponta das Canas', 'Cachoeira do Bom Jesus',
-  'Ingleses', 'Santinho', 'Rio Vermelho', 'Vargem Grande', 'Vargem Pequena',
-  // Ilha — Leste
-  'Barra da Lagoa', 'Lagoa da Conceição', 'Praia Mole', 'São João do Rio Vermelho',
-  // Ilha — Sul
-  'Campeche', 'Morro das Pedras', 'Armação', 'Pântano do Sul', 'Ribeirão da Ilha',
-  'Tapera', 'Carianos', 'Costeira do Pirajubaé', 'Saco dos Limões',
-  // Ilha — Central/Leste
-  'Rio Tavares', 'Itacorubi', 'Trindade', 'Córrego Grande', 'Santa Mônica',
-  'Pantanal', 'Serrinha',
-  // Ilha — Central
-  'Centro', 'Agronômica', 'José Mendes', 'Saco Grande', 'João Paulo',
-  'Santo Antônio de Lisboa', 'Ratones', 'Sambaqui', 'Cacupé',
-  // Continental
-  'Estreito', 'Capoeiras', 'Coqueiros', 'Abraão', 'Balneário', 'Coloninha',
-  'Monte Cristo', 'Jardim Atlântico', 'Itaguaçu', 'Bom Abrigo', 'Bela Vista',
-];
-
 /**
  * Categoriza score numérico em nível de risco textual.
  * D-06: Verde 0-25, Amarelo 26-50, Laranja 51-75, Vermelho 76-100.
@@ -53,20 +31,6 @@ function categorizarNivel(score) {
   if (score <= 50) return 'amarelo';
   if (score <= 75) return 'laranja';
   return 'vermelho';
-}
-
-/**
- * Normaliza nome de bairro para comparação tolerante a acentos e capitalização.
- * Ex: "Agronômica" → "agronomica"
- * @param {string} nome
- * @returns {string}
- */
-function normalizarNome(nome) {
-  return nome
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
 }
 
 /**
