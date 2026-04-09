@@ -88,7 +88,8 @@ router.get('/google/callback', async (req, res) => {
     req.session.email  = user.email;
     req.session.nome   = user.nome;
 
-    res.redirect('/?auth=success');
+    const frontendUrl = process.env.FRONTEND_URL || '';
+    res.redirect(`${frontendUrl}/?auth=success`);
   } catch (err) {
     console.error('[auth] callback error:', err.message);
     res.redirect('/?auth_error=callback_failed');
