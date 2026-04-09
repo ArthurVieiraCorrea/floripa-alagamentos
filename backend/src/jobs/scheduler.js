@@ -8,6 +8,7 @@
 const cron = require('node-cron');
 const { fetchAndCacheForecasts } = require('../services/forecastService');
 const { calcularRiscos } = require('../services/riskEngine');
+const { syncAllConnectedUsers } = require('../services/calendarService');
 
 let initialized = false;
 
@@ -37,7 +38,15 @@ function initScheduler() {
     await calcularRiscos();
   });
 
-  console.log('[scheduler] Jobs iniciados. Forecast: 0 * * * * | Risco: 5 */4 * * *');
+  // CAL-02/CAL-03: sincronizar calendários dos usuários a cada 30 minutos
+  cron.schedule('*/30 * * * *', async () => {
+    console.log('[scheduler] Sincronizando calendários dos usuários...');
+    await syncAllConnectedUsers();
+  }, {
+    timezone: 'America/Sao_Paulo',
+  });
+
+  console.log('[scheduler] Jobs iniciados. Forecast: 0 * * * * | Risco: 5 */4 * * * | Calendar: */30 * * * *');
 
   // Executar imediatamente na inicialização — encadeado para garantir ordem:
   // forecast primeiro, depois risco (evita calcularRiscos com cache vazio)

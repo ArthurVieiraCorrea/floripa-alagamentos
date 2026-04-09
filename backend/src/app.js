@@ -29,6 +29,7 @@ const authRouter   = require('./routes/auth');
 const ocorrenciasRouter = require('./routes/ocorrencias');
 const previsaoRouter    = require('./routes/previsao');
 const riscoRouter       = require('./routes/risco');
+const calendarRouter    = require('./routes/calendar');
 const { initScheduler } = require('./jobs/scheduler');
 
 const app = express();
@@ -59,6 +60,7 @@ app.use('/api/auth',  authRouter);   // REST endpoint (/api/auth/me) — same ro
 app.use('/api/ocorrencias', ocorrenciasRouter);
 app.use('/api/previsao',    previsaoRouter);
 app.use('/api/risco',       riscoRouter);
+app.use('/api/calendar',    calendarRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
