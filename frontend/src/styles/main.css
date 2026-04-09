@@ -168,8 +168,22 @@ html, body { height: 100%; font-family: system-ui, sans-serif; background: var(-
 .card-ocorrencia.nivel-alto    { border-left-color: var(--alto); }
 .card-ocorrencia.nivel-critico { border-left-color: var(--critico); }
 
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.card-bairro { font-size: 0.85rem; font-weight: 600; }
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 6px; }
+.card-bairro { font-size: 0.85rem; font-weight: 600; flex: 1; }
+
+.btn-deletar {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.btn-deletar:hover { color: #fca5a5; background: rgba(239,68,68,.15); }
 .badge {
   font-size: 0.65rem;
   font-weight: 700;
@@ -274,4 +288,106 @@ html, body { height: 100%; font-family: system-ui, sans-serif; background: var(-
   border-top: 1px solid var(--border);
   text-align: center;
   white-space: nowrap;
+}
+
+/* ── Seção Calendário Google ──────────────────────────── */
+.banner-aviso {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: #7c2d12;
+  color: #fed7aa;
+  border-radius: 6px;
+  padding: .6rem .8rem;
+  font-size: .8rem;
+  margin-bottom: .75rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #fdba74;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: .8rem;
+  padding: 0;
+}
+
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+
+.btn-sm {
+  font-size: .75rem;
+  padding: .3rem .6rem;
+}
+
+.lista-eventos-cal {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.calendario-evento {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: .6rem .75rem;
+  border-left: 3px solid var(--accent);
+  font-size: .82rem;
+}
+
+.cal-summary {
+  font-weight: 600;
+  margin-bottom: .2rem;
+  color: var(--text);
+}
+
+.cal-start {
+  color: var(--text-muted);
+  font-size: .75rem;
+  margin-bottom: .2rem;
+}
+
+.cal-location {
+  color: var(--text-muted);
+  font-size: .75rem;
+  margin-bottom: .3rem;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-bairro-row {
+  margin-top: .25rem;
+}
+
+.cal-bairro.resolvido {
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+.cal-select-bairro {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: .2rem .4rem;
+  font-size: .75rem;
+  width: 100%;
+  cursor: pointer;
+}
+
+.cal-select-bairro:disabled {
+  opacity: .5;
+  cursor: wait;
 }

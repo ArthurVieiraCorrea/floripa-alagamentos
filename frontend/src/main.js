@@ -2,6 +2,22 @@ import { api } from './services/api.js';
 import { iniciarMapa, renderizarMarcadores, renderizarCamadaRisco, removerCamadaRisco } from './services/mapa.js';
 import { criarControleToggle, criarControleSeletor } from './services/controles.js';
 
+// Lista canônica de bairros — espelho de backend/src/constants/bairros.js
+// Usada no <select> de associação manual de bairro (CAL-04)
+const BAIRROS_CAL = [
+  'Canasvieiras', 'Jurerê', 'Daniela', 'Ponta das Canas', 'Cachoeira do Bom Jesus',
+  'Ingleses', 'Santinho', 'Rio Vermelho', 'Vargem Grande', 'Vargem Pequena',
+  'Barra da Lagoa', 'Lagoa da Conceição', 'Praia Mole', 'São João do Rio Vermelho',
+  'Campeche', 'Morro das Pedras', 'Armação', 'Pântano do Sul', 'Ribeirão da Ilha',
+  'Tapera', 'Carianos', 'Costeira do Pirajubaé', 'Saco dos Limões',
+  'Rio Tavares', 'Itacorubi', 'Trindade', 'Córrego Grande', 'Santa Mônica',
+  'Pantanal', 'Serrinha',
+  'Centro', 'Agronômica', 'José Mendes', 'Saco Grande', 'João Paulo',
+  'Santo Antônio de Lisboa', 'Ratones', 'Sambaqui', 'Cacupé',
+  'Estreito', 'Capoeiras', 'Coqueiros', 'Abraão', 'Balneário', 'Coloninha',
+  'Monte Cristo', 'Jardim Atlântico', 'Itaguaçu', 'Bom Abrigo', 'Bela Vista',
+];
+
 // ── Estado ──────────────────────────────────────────────
 const state = {
   marcadores: [],
@@ -56,8 +72,6 @@ seletor.controle.addTo(map);
 atualizarTimestamp = seletor.atualizarTimestamp;
 
 map.on('click', (e) => {
-  // Em modo risco, cliques no mapa não capturam coordenadas (evita interferência com choropleth)
-  if (state.modoAtivo === 'risco') return;
   const { lat, lng } = e.latlng;
   document.getElementById('lat').value = lat.toFixed(6);
   document.getElementById('lng').value = lng.toFixed(6);
@@ -126,7 +140,7 @@ async function carregarCamadaRisco() {
       atualizarTimestamp('Calculando...');
     }
   } catch (e) {
-    if (e.message && e.message.includes('503')) {
+    if (e.status === 503) {
       // Estado esperado antes do primeiro cálculo do cron — renderiza tudo cinza
       // Garantir GeoJSON carregado mesmo no cold-start (Promise.all pode ter falhado na parte de scores)
       if (!state.geojsonBairros) {
@@ -169,25 +183,42 @@ function renderizarLista(dados, paginacao) {
       <div class="card-top">
         <span class="card-bairro">${o.bairro}</span>
         <span class="badge badge-${o.nivel}">${NIVEL_LABEL[o.nivel] || o.nivel}</span>
+        <button class="btn-deletar" data-id="${o.id}" title="Deletar ocorrência">✕</button>
       </div>
       ${o.descricao ? `<div class="card-desc">${o.descricao}</div>` : ''}
       <div class="card-data">${formatarData(o.criado_em)}</div>
     </div>
   `).join('');
 
-  // Click -> voa para o ponto no mapa
+  // Click no card -> voa para o ponto no mapa
   lista.querySelectorAll('.card-ocorrencia').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-deletar')) return;
       const lat = parseFloat(el.dataset.lat);
       const lng = parseFloat(el.dataset.lng);
       map.flyTo([lat, lng], 16, { duration: 1 });
-      // Abre o popup do marcador correspondente
       state.marcadores.forEach(m => {
         const ll = m.getLatLng();
         if (Math.abs(ll.lat - lat) < 0.0001 && Math.abs(ll.lng - lng) < 0.0001) {
           m.openPopup();
         }
       });
+    });
+  });
+
+  // Click no botão deletar
+  lista.querySelectorAll('.btn-deletar').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      if (!confirm('Deletar esta ocorrência?')) return;
+      try {
+        await api.deletarOcorrencia(id);
+        await Promise.all([carregarStats(), carregarHistorico()]);
+        if (state.modoAtivo === 'ocorrencias') carregarMapa();
+      } catch (err) {
+        alert(`Erro ao deletar: ${err.message}`);
+      }
     });
   });
 
@@ -234,9 +265,22 @@ document.getElementById('form-ocorrencia').addEventListener('submit', async (e) 
   btn.disabled = true;
   btn.textContent = 'Enviando...';
 
+  const lat = parseFloat(form.latitude.value);
+  const lng = parseFloat(form.longitude.value);
+
+  // Validação de bounds — coordenadas devem estar dentro da região de Florianópolis
+  const dentroDeFloripa = lat >= -27.9 && lat <= -27.3 && lng >= -48.9 && lng <= -48.2;
+  if (!dentroDeFloripa) {
+    msg.className = 'form-msg error';
+    msg.textContent = 'Coordenadas fora de Florianópolis. Clique no mapa para definir o ponto.';
+    btn.disabled = false;
+    btn.textContent = 'Registrar Ocorrência';
+    return;
+  }
+
   const data = {
-    latitude:   parseFloat(form.latitude.value),
-    longitude:  parseFloat(form.longitude.value),
+    latitude:   lat,
+    longitude:  lng,
     bairro:     form.bairro.value,
     nivel:      form.nivel.value,
     descricao:  form.descricao.value
@@ -278,6 +322,169 @@ document.getElementById('btn-filtrar').addEventListener('click', () => {
   carregarHistorico();
 });
 
+// ── Calendário Google ────────────────────────────────────
+
+/**
+ * Formata data ISO 8601 para exibição em pt-BR.
+ * @param {string} iso
+ * @returns {string} ex: "qui, 10/04 às 14:30"
+ */
+function formatarDataEvento(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString('pt-BR', {
+    weekday: 'short', day: '2-digit', month: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+/**
+ * Renderiza lista de eventos do calendário no #lista-eventos-cal.
+ * Eventos com bairro resolvido mostram o bairro.
+ * Eventos sem bairro resolvido mostram <select> com BAIRROS_CAL (CAL-04).
+ * @param {Array} eventos
+ */
+function renderizarEventos(eventos) {
+  const lista = document.getElementById('lista-eventos-cal');
+
+  if (!eventos.length) {
+    lista.innerHTML = '<p class="hint">Nenhum evento nas próximas 72h.</p>';
+    return;
+  }
+
+  lista.innerHTML = eventos.map(ev => {
+    const summaryEscaped  = String(ev.summary  || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const locationEscaped = String(ev.location || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const bairroHtml = ev.bairro_resolvido
+      ? `<span class="cal-bairro resolvido">${ev.bairro_resolvido}</span>`
+      : `<select class="cal-select-bairro" data-event-id="${ev.google_event_id}">
+           <option value="">Associar bairro...</option>
+           ${BAIRROS_CAL.map(b => `<option value="${b}">${b}</option>`).join('')}
+         </select>`;
+
+    const locationHtml = ev.location
+      ? `<div class="cal-location">${locationEscaped}</div>`
+      : '';
+
+    return `
+      <div class="calendario-evento" data-event-id="${ev.google_event_id}">
+        <div class="cal-summary">${summaryEscaped || '(Sem título)'}</div>
+        <div class="cal-start">${formatarDataEvento(ev.start_time)}</div>
+        ${locationHtml}
+        <div class="cal-bairro-row">${bairroHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Listener para seletor de bairro manual (CAL-04)
+  lista.querySelectorAll('.cal-select-bairro').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const bairro = sel.value;
+      if (!bairro) return;
+      const googleEventId = sel.dataset.eventId;
+      sel.disabled = true;
+      try {
+        await api.atualizarBairroEvento(googleEventId, bairro);
+        // Recarregar lista para refletir o bairro salvo
+        await carregarCalendario();
+      } catch (err) {
+        console.error('[calendar] Erro ao associar bairro:', err.message);
+        sel.disabled = false;
+      }
+    });
+  });
+}
+
+/**
+ * Carrega e exibe o estado atual do calendário para o usuário autenticado.
+ * Controla visibilidade dos 4 estados: nao-autenticado, banner, nao-conectado, conectado.
+ * @param {{ calendar_connected: number, calendar_disconnected: number }|null} usuario
+ */
+async function carregarCalendario(usuario) {
+  const elNaoAuth   = document.getElementById('cal-nao-autenticado');
+  const elNaoCon    = document.getElementById('cal-nao-conectado');
+  const elConectado = document.getElementById('cal-conectado');
+  const elBanner    = document.getElementById('banner-cal-desconectado');
+
+  // Ocultar tudo antes de decidir o estado
+  elNaoAuth.style.display   = 'none';
+  elNaoCon.style.display    = 'none';
+  elConectado.style.display = 'none';
+  elBanner.style.display    = 'none';
+
+  if (!usuario) {
+    elNaoAuth.style.display = 'block';
+    return;
+  }
+
+  // Banner de reconexão (invalid_grant)
+  if (usuario.calendar_disconnected === 1) {
+    elBanner.style.display = 'flex';
+    elNaoCon.style.display = 'block';
+    return;
+  }
+
+  if (!usuario.calendar_connected) {
+    elNaoCon.style.display = 'block';
+    return;
+  }
+
+  // Conectado: buscar e renderizar eventos
+  elConectado.style.display = 'block';
+  const lista = document.getElementById('lista-eventos-cal');
+  lista.innerHTML = '<p class="loading">Carregando eventos...</p>';
+  try {
+    const { eventos } = await api.listarEventosCalendario();
+    renderizarEventos(eventos);
+  } catch (err) {
+    lista.innerHTML = `<p class="hint" style="color:#fca5a5">Erro ao carregar eventos: ${err.message}</p>`;
+  }
+}
+
+// ── Calendar: connect / disconnect ──────────────────────
+
+document.getElementById('btn-conectar-cal').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-conectar-cal');
+  const msg = document.getElementById('cal-connect-msg');
+  btn.disabled = true;
+  btn.textContent = 'Conectando...';
+  msg.className = 'form-msg';
+  msg.textContent = '';
+  try {
+    await api.conectarCalendario();
+    await carregarSessao();
+  } catch (err) {
+    msg.className = 'form-msg error';
+    msg.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Conectar Calendário';
+  }
+});
+
+document.getElementById('btn-reconectar-cal').addEventListener('click', async () => {
+  document.getElementById('btn-reconectar-cal').disabled = true;
+  try {
+    await api.conectarCalendario();
+    await carregarSessao();
+  } catch (err) {
+    console.error('[calendar] Erro ao reconectar:', err.message);
+    document.getElementById('btn-reconectar-cal').disabled = false;
+  }
+});
+
+document.getElementById('btn-desconectar-cal').addEventListener('click', async () => {
+  if (!confirm('Desconectar o Google Calendar? Seus eventos salvos serão removidos do cache.')) return;
+  const btn = document.getElementById('btn-desconectar-cal');
+  btn.disabled = true;
+  try {
+    await api.desconectarCalendario();
+    await carregarSessao();
+  } catch (err) {
+    console.error('[calendar] Erro ao desconectar:', err.message);
+    btn.disabled = false;
+  }
+});
+
 // ── Sessão / Auth ────────────────────────────────────────
 async function carregarSessao() {
   try {
@@ -290,9 +497,11 @@ async function carregarSessao() {
       btnLogin.style.display  = 'none';
       userInfo.style.display  = 'flex';
       userNome.textContent    = usuario.nome || usuario.email;
+      await carregarCalendario(usuario);
     } else {
       btnLogin.style.display  = 'inline-block';
       userInfo.style.display  = 'none';
+      carregarCalendario(null);
     }
   } catch (err) {
     console.error('Erro ao verificar sessão:', err.message);
