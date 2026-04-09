@@ -66,12 +66,13 @@
         <div class="tabs">
           <button class="tab active" data-tab="registrar">Registrar</button>
           <button class="tab" data-tab="historico">Histórico</button>
+          <button class="tab" data-tab="calendario">Calendário</button>
         </div>
 
         <!-- Registrar -->
         <div class="tab-content active" id="tab-registrar">
           <h2>Nova Ocorrência</h2>
-          <p class="hint">Clique no mapa para definir a localização ou preencha as coordenadas.</p>
+          <p class="hint">Clique no mapa para definir a localização (funciona nos dois modos).</p>
           <form id="form-ocorrencia">
             <div class="field">
               <label>Latitude</label>
@@ -122,6 +123,40 @@
             <p class="loading">Carregando...</p>
           </div>
           <div id="paginacao" class="paginacao"></div>
+        </div>
+
+        <!-- Calendário Google -->
+        <div class="tab-content" id="tab-calendario">
+          <h2>Google Calendar</h2>
+
+          <!-- Banner: invalid_grant (calendar_disconnected=1) -->
+          <div id="banner-cal-desconectado" class="banner-aviso" style="display:none">
+            Seu calendário foi desconectado (token expirado).
+            <button id="btn-reconectar-cal" class="btn-link">Reconectar</button>
+          </div>
+
+          <!-- Estado: não autenticado -->
+          <div id="cal-nao-autenticado" style="display:none">
+            <p class="hint">Faça login para conectar o Google Calendar.</p>
+          </div>
+
+          <!-- Estado: autenticado, não conectado -->
+          <div id="cal-nao-conectado" style="display:none">
+            <p class="hint">Conecte o Google Calendar para ver seus eventos das próximas 72h e receber alertas de risco.</p>
+            <button id="btn-conectar-cal" class="btn-primary">Conectar Calendário</button>
+            <div id="cal-connect-msg" class="form-msg"></div>
+          </div>
+
+          <!-- Estado: conectado -->
+          <div id="cal-conectado" style="display:none">
+            <div class="cal-header">
+              <span class="hint">Eventos nas próximas 72h</span>
+              <button id="btn-desconectar-cal" class="btn-secondary btn-sm">Desconectar</button>
+            </div>
+            <div id="lista-eventos-cal" class="lista-eventos-cal">
+              <p class="loading">Carregando eventos...</p>
+            </div>
+          </div>
         </div>
       </aside>
 

@@ -7,7 +7,7 @@ async function request(path, options = {}) {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.erro || `HTTP ${res.status}`);
+    throw Object.assign(new Error(body.erro || `HTTP ${res.status}`), { status: res.status });
   }
   return res.status === 204 ? null : res.json();
 }
@@ -42,4 +42,19 @@ export const api = {
 
   riscos: (window = 24) =>
     request(`/risco/bairros?window=${window}`),
+
+  conectarCalendario: () =>
+    request('/calendar/connect', { method: 'POST' }),
+
+  desconectarCalendario: () =>
+    request('/calendar/disconnect', { method: 'DELETE' }),
+
+  listarEventosCalendario: () =>
+    request('/calendar/eventos'),
+
+  atualizarBairroEvento: (googleEventId, bairro) =>
+    request(`/calendar/eventos/${encodeURIComponent(googleEventId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ bairro }),
+    }),
 };
