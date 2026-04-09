@@ -109,6 +109,26 @@ function initSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_risk_scores_window
       ON risk_scores(window_hours)
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS calendar_events_cache (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id       INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      google_event_id  TEXT    NOT NULL,
+      summary          TEXT,
+      start_time       TEXT    NOT NULL,
+      end_time         TEXT    NOT NULL,
+      location         TEXT,
+      bairro_resolvido TEXT,
+      synced_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(usuario_id, google_event_id)
+    )
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_cal_cache_usuario_start
+      ON calendar_events_cache(usuario_id, start_time)
+  `);
 }
 
 module.exports = { getDb };
