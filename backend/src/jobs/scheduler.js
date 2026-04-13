@@ -9,6 +9,7 @@ const cron = require('node-cron');
 const { fetchAndCacheForecasts } = require('../services/forecastService');
 const { calcularRiscos } = require('../services/riskEngine');
 const { syncAllConnectedUsers } = require('../services/calendarService');
+const { checkAndSendAlerts } = require('../services/alertService');
 
 let initialized = false;
 
@@ -32,10 +33,12 @@ function initScheduler() {
     timezone: 'America/Sao_Paulo',
   });
 
-  // RISCO-03: recalcular scores a cada 4h (offset de 5min garante forecast já atualizado)
+  // RISCO-03 + ALERT-02/ALERT-03: recalcular scores e enviar alertas a cada 4h
   cron.schedule('5 */4 * * *', async () => {
     console.log('[scheduler] Recalculando risk scores...');
     await calcularRiscos();
+    console.log('[scheduler] Verificando alertas após recálculo...');
+    await checkAndSendAlerts();
   });
 
   // CAL-02/CAL-03: sincronizar calendários dos usuários a cada 30 minutos
@@ -46,10 +49,10 @@ function initScheduler() {
     timezone: 'America/Sao_Paulo',
   });
 
-  console.log('[scheduler] Jobs iniciados. Forecast: 0 * * * * | Risco: 5 */4 * * * | Calendar: */30 * * * *');
+  console.log('[scheduler] Jobs iniciados. Forecast: 0 * * * * | Risco+Alertas: 5 */4 * * * | Calendar: */30 * * * *');
 
   // Executar imediatamente na inicialização — encadeado para garantir ordem:
-  // forecast primeiro, depois risco (evita calcularRiscos com cache vazio)
+  // forecast primeiro, depois risco (evita calcularRiscos com cache vazio), depois alertas
   (async () => {
     try {
       await fetchAndCacheForecasts();
@@ -60,6 +63,11 @@ function initScheduler() {
       await calcularRiscos();
     } catch (err) {
       console.error('[scheduler] Erro no cálculo inicial de risco:', err.message);
+    }
+    try {
+      await checkAndSendAlerts();    // D-15: encadeado após calcularRiscos()
+    } catch (err) {
+      console.error('[scheduler] Erro na verificação inicial de alertas:', err.message);
     }
   })();
 }
