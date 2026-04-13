@@ -40,7 +40,6 @@ const state = {
   modoAtivo: 'risco',             // 'risco' | 'ocorrencias' — D-03 default: risco
   horizonteAtivo: 24,             // 24 | 48 | 72 — D-05 default: 24h
   geojsonBairros: null,           // cache do fetch de bairros.geojson — fetch uma única vez
-  // Phase 06 additions
   usuario: null,                  // usuário autenticado atual (com alert_threshold)
 };
 
@@ -196,7 +195,7 @@ function renderizarLista(dados, paginacao) {
       <div class="card-top">
         <span class="card-bairro">${o.bairro}</span>
         <span class="badge badge-${o.nivel}">${NIVEL_LABEL[o.nivel] || o.nivel}</span>
-        <button class="btn-deletar" data-id="${o.id}" title="Deletar ocorrência">✕</button>
+        ${state.usuario ? `<button class="btn-deletar" data-id="${o.id}" title="Deletar ocorrência">✕</button>` : ''}
       </div>
       ${o.descricao ? `<div class="card-desc">${o.descricao}</div>` : ''}
       <div class="card-data">${formatarData(o.criado_em)}</div>
@@ -512,11 +511,13 @@ async function carregarSessao() {
 
     state.usuario = usuario || null;
     if (usuario) {
+      state.usuario = usuario;
       btnLogin.style.display  = 'none';
       userInfo.style.display  = 'flex';
       userNome.textContent    = usuario.nome || usuario.email;
       await carregarCalendario(usuario);
     } else {
+      state.usuario = null;
       btnLogin.style.display  = 'inline-block';
       userInfo.style.display  = 'none';
       carregarCalendario(null);
