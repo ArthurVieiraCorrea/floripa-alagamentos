@@ -146,6 +146,31 @@ function initSchema(db) {
       ON push_subscriptions(usuario_id)
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS alertas_enviados (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id      INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      google_event_id TEXT    NOT NULL,
+      risk_cycle_key  TEXT    NOT NULL,
+      bairro          TEXT    NOT NULL,
+      score           REAL    NOT NULL,
+      summary         TEXT,
+      enviado_em      TEXT    NOT NULL DEFAULT (datetime('now')),
+      visto_em        TEXT,
+      UNIQUE(usuario_id, google_event_id, risk_cycle_key)
+    )
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_alertas_enviados_usuario_visto
+      ON alertas_enviados(usuario_id, visto_em)
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_alertas_enviados_usuario_em
+      ON alertas_enviados(usuario_id, enviado_em)
+  `);
+
   // Adicionar alert_threshold se não existir (migrações seguras para SQLite)
   try {
     db.run(`ALTER TABLE usuarios ADD COLUMN alert_threshold INTEGER NOT NULL DEFAULT 51`);
