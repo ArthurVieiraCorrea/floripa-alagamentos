@@ -67,4 +67,10 @@ export const api = {
       request('/push/threshold', { method: 'PATCH', body: JSON.stringify({ threshold }) }),
     getVapidPublicKey: () => request('/push/vapid-public-key'),
   },
+
+  alertas: {
+    pendentes: () => request('/alertas/pendentes'),
+    marcarVisto: (ids) =>
+      request('/alertas/marcar-visto', { method: 'POST', body: JSON.stringify({ ids }) }),
+  },
 };

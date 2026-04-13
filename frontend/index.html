@@ -135,6 +135,15 @@
             <button id="btn-reconectar-cal" class="btn-link">Reconectar</button>
           </div>
 
+          <!-- Banner de alertas in-app — fallback para usuários sem push subscription (ALERT-05, D-04, D-07) -->
+          <div id="banner-alertas" class="banner-aviso banner-alertas" style="display:none">
+            <div id="banner-alertas-corpo">
+              <strong>Alerta de alagamento:</strong>
+              <span id="banner-alertas-texto">Evento em área de risco.</span>
+            </div>
+            <button id="btn-fechar-banner-alertas" class="btn-link banner-fechar" title="Fechar" aria-label="Fechar alerta">&#10005;</button>
+          </div>
+
           <!-- Estado: não autenticado -->
           <div id="cal-nao-autenticado" style="display:none">
             <p class="hint">Faça login para conectar o Google Calendar.</p>

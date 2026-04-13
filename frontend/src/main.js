@@ -323,6 +323,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
     if (tab.dataset.tab === 'historico') carregarHistorico();
+    if (tab.dataset.tab === 'calendario') verificarAlertasPendentes(); // D-04: re-checar ao abrir aba
   });
 });
 
@@ -590,6 +591,95 @@ async function verificarStatusPush(threshold) {
   atualizarStatusPush(sub ? 'ativo' : 'inativo', threshold);
 }
 
+// ── Alertas in-app (ALERT-05) ────────────────────────────
+
+// Chave localStorage: IDs de alertas fechados na sessão atual (D-06)
+// Banner não reaparece na mesma sessão após fechar.
+// Re-aparece na próxima sessão se ainda pendentes no servidor (D-05).
+const ALERTAS_FECHADOS_KEY = 'floripa_alertas_fechados';
+
+/**
+ * Retorna conjunto de IDs de alertas fechados na sessão atual.
+ * @returns {Set<number>}
+ */
+function getAlertasFechadosNaSessao() {
+  try {
+    const raw = sessionStorage.getItem(ALERTAS_FECHADOS_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch (_) {
+    return new Set();
+  }
+}
+
+/**
+ * Marca um conjunto de IDs como fechados na sessão (sessionStorage).
+ * @param {number[]} ids
+ */
+function marcarFechadosNaSessao(ids) {
+  try {
+    const fechados = getAlertasFechadosNaSessao();
+    ids.forEach(id => fechados.add(id));
+    sessionStorage.setItem(ALERTAS_FECHADOS_KEY, JSON.stringify([...fechados]));
+  } catch (_) { /* sessionStorage indisponível — ignorar */ }
+}
+
+/**
+ * Exibe ou oculta o banner de alertas in-app com base nos alertas pendentes.
+ * Filtra alertas já fechados nesta sessão (sessionStorage).
+ * Se todos os alertas pendentes foram fechados na sessão: oculta banner.
+ * @param {{ id: number, bairro: string, score: number, summary: string|null }[]} alertas
+ */
+function atualizarBannerAlertas(alertas) {
+  const banner = document.getElementById('banner-alertas');
+  if (!banner) return;
+
+  if (!alertas || alertas.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  const fechadosNaSessao = getAlertasFechadosNaSessao();
+  const visiveis = alertas.filter(a => !fechadosNaSessao.has(a.id));
+
+  if (visiveis.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  // Montar texto do banner com os alertas visíveis
+  const textoEl = document.getElementById('banner-alertas-texto');
+  if (textoEl) {
+    if (visiveis.length === 1) {
+      const a = visiveis[0];
+      const nivelLabel = a.score >= 76 ? 'Vermelho' : a.score >= 51 ? 'Laranja' : a.score >= 26 ? 'Amarelo' : 'Verde';
+      const summary = a.summary ? `"${a.summary}" em ` : 'Evento em ';
+      textoEl.textContent = `${summary}${a.bairro} — risco ${nivelLabel} (score ${Math.round(a.score)}).`;
+    } else {
+      const bairros = [...new Set(visiveis.map(a => a.bairro))].join(', ');
+      textoEl.textContent = `${visiveis.length} eventos em áreas de risco: ${bairros}.`;
+    }
+  }
+
+  banner.style.display = 'flex';
+}
+
+/**
+ * Polling: verifica alertas pendentes e atualiza banner.
+ * Chamado pelo setInterval de 60s existente e na inicialização.
+ * Silencioso em caso de erro (usuário não autenticado retorna 401 — ignorado).
+ */
+async function verificarAlertasPendentes() {
+  if (!state.usuario) return;  // não autenticado: skip silencioso
+  try {
+    const { alertas } = await api.alertas.pendentes();
+    atualizarBannerAlertas(alertas);
+  } catch (err) {
+    if (err.status !== 401) {
+      console.error('[alertas] Erro ao verificar pendentes:', err.message);
+    }
+  }
+}
+
 // Ativar push (D-02, ALERT-01)
 document.getElementById('btn-push-optin').addEventListener('click', async () => {
   const btn = document.getElementById('btn-push-optin');
@@ -678,12 +768,37 @@ document.getElementById('sel-threshold').addEventListener('change', async (e) =>
   }
 });
 
+// Fechar banner de alertas in-app (D-04, D-06)
+document.getElementById('btn-fechar-banner-alertas').addEventListener('click', async () => {
+  const banner = document.getElementById('banner-alertas');
+
+  // 1. Ocultar imediatamente (UX responsivo)
+  banner.style.display = 'none';
+
+  // 2. Buscar IDs dos alertas pendentes para marcar como fechados na sessão
+  try {
+    const { alertas } = await api.alertas.pendentes();
+    if (alertas && alertas.length > 0) {
+      const ids = alertas.map(a => a.id);
+      // Marcar no sessionStorage — banner não reaparece nesta sessão (D-06)
+      marcarFechadosNaSessao(ids);
+      // Marcar no servidor como visto — banner não reaparece em outros dispositivos
+      await api.alertas.marcarVisto(ids).catch(() => {
+        // Falha na marcação servidor não impede o comportamento local
+        console.warn('[alertas] Não foi possível marcar como visto no servidor');
+      });
+    }
+  } catch (err) {
+    console.error('[alertas] Erro ao processar fechamento do banner:', err.message);
+  }
+});
+
 // ── Init ─────────────────────────────────────────────────
 carregarStats();
 // D-03: modo padrão é 'risco' — NÃO chamar carregarMapa() no startup para evitar estado misto (D-04)
 // carregarMapa() só é chamado quando o usuário clica [Ocorrências] no toggle
 carregarCamadaRisco(); // carrega choropleth no startup (modo padrão: risco)
-carregarSessao();
+carregarSessao().then(() => verificarAlertasPendentes()); // D-05: verificar alertas ao carregar
 
 // Registrar service worker para push notifications (D-11)
 if ('serviceWorker' in navigator) {
@@ -704,4 +819,5 @@ setInterval(() => {
   } else {
     carregarMapa();
   }
+  verificarAlertasPendentes();  // D-18: polling de alertas in-app
 }, 60_000);
