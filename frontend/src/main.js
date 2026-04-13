@@ -18,6 +18,17 @@ const BAIRROS_CAL = [
   'Monte Cristo', 'Jardim Atlântico', 'Itaguaçu', 'Bom Abrigo', 'Bela Vista',
 ];
 
+// ── Push notifications ───────────────────────────────────
+let swRegistration = null;
+
+// Converte base64url para Uint8Array (obrigatório para PushManager.subscribe)
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
 // ── Estado ──────────────────────────────────────────────
 const state = {
   marcadores: [],
@@ -28,7 +39,9 @@ const state = {
   camadaRisco: { layer: null },   // referência mutável para removeLayer sem acúmulo
   modoAtivo: 'risco',             // 'risco' | 'ocorrencias' — D-03 default: risco
   horizonteAtivo: 24,             // 24 | 48 | 72 — D-05 default: 24h
-  geojsonBairros: null            // cache do fetch de bairros.geojson — fetch uma única vez
+  geojsonBairros: null,           // cache do fetch de bairros.geojson — fetch uma única vez
+  // Phase 06 additions
+  usuario: null,                  // usuário autenticado atual (com alert_threshold)
 };
 
 // Declarado aqui para estar disponível quando os controles forem inicializados (evita TDZ)
@@ -439,6 +452,10 @@ async function carregarCalendario(usuario) {
   } catch (err) {
     lista.innerHTML = `<p class="hint" style="color:#fca5a5">Erro ao carregar eventos: ${err.message}</p>`;
   }
+
+  // D-01, D-03: exibir seção Notificações e verificar status push
+  document.getElementById('secao-notificacoes').style.display = 'block';
+  verificarStatusPush(usuario?.alert_threshold || 51);
 }
 
 // ── Calendar: connect / disconnect ──────────────────────
@@ -493,6 +510,7 @@ async function carregarSessao() {
     const userInfo  = document.getElementById('user-info');
     const userNome  = document.getElementById('user-nome');
 
+    state.usuario = usuario || null;
     if (usuario) {
       btnLogin.style.display  = 'none';
       userInfo.style.display  = 'flex';
@@ -508,12 +526,173 @@ async function carregarSessao() {
   }
 }
 
+// ── Push UI ──────────────────────────────────────────────
+
+/**
+ * Atualiza indicador de status push e exibe botões corretos.
+ * @param {'ativo'|'inativo'|'negado'|'sem-suporte'} status
+ * @param {number} [threshold] — alert_threshold do usuário para pré-selecionar o <select>
+ */
+function atualizarStatusPush(status, threshold) {
+  const icon  = document.getElementById('push-status-icon');
+  const texto = document.getElementById('push-status-texto');
+  const btnOn  = document.getElementById('btn-push-optin');
+  const btnOff = document.getElementById('btn-push-optout');
+  const thRow  = document.getElementById('push-threshold-row');
+
+  btnOn.style.display  = 'none';
+  btnOff.style.display = 'none';
+  thRow.style.display  = 'none';
+
+  if (status === 'ativo') {
+    icon.style.color  = '#22c55e';
+    texto.textContent = 'Notificações push ativas';
+    btnOff.style.display = 'inline-block';
+    thRow.style.display  = 'flex';
+    if (threshold !== undefined) {
+      const sel = document.getElementById('sel-threshold');
+      if (sel) sel.value = String(threshold);
+    }
+  } else if (status === 'negado') {
+    icon.style.color  = '#ef4444';
+    texto.textContent = 'Notificações bloqueadas pelo browser. Habilite nas configurações.';
+  } else if (status === 'sem-suporte') {
+    icon.style.color  = '#6b7280';
+    texto.textContent = 'Seu browser não suporta notificações push.';
+  } else {
+    // inativo
+    icon.style.color  = '#f59e0b';
+    texto.textContent = 'Notificações push inativas';
+    btnOn.style.display = 'inline-block';
+  }
+}
+
+/**
+ * Verifica se o usuário já tem subscription ativa e atualiza a UI.
+ * Chamado ao renderizar o estado "conectado".
+ * @param {number} [threshold] — alert_threshold do usuário
+ */
+async function verificarStatusPush(threshold) {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    atualizarStatusPush('sem-suporte');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    atualizarStatusPush('negado');
+    return;
+  }
+  if (!swRegistration) {
+    atualizarStatusPush('inativo', threshold);
+    return;
+  }
+  const sub = await swRegistration.pushManager.getSubscription();
+  atualizarStatusPush(sub ? 'ativo' : 'inativo', threshold);
+}
+
+// Ativar push (D-02, ALERT-01)
+document.getElementById('btn-push-optin').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-push-optin');
+  const msg = document.getElementById('push-msg');
+  msg.textContent = '';
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    msg.className = 'form-msg error';
+    msg.textContent = 'Browser não suporta push.';
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    msg.className = 'form-msg error';
+    msg.textContent = 'Notificações bloqueadas. Habilite nas configurações do browser.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Solicitando permissão...';
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      msg.className = 'form-msg error';
+      msg.textContent = 'Permissão não concedida.';
+      btn.disabled = false;
+      btn.textContent = 'Ativar notificações push';
+      return;
+    }
+
+    if (!swRegistration) {
+      swRegistration = await navigator.serviceWorker.ready;
+    }
+
+    const { publicKey: VAPID_PUBLIC_KEY } = await api.push.getVapidPublicKey();
+    if (!VAPID_PUBLIC_KEY) throw new Error('VAPID_PUBLIC_KEY não configurada no servidor');
+
+    const subscription = await swRegistration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+
+    await api.push.subscribe(subscription.toJSON());
+    msg.className = 'form-msg success';
+    msg.textContent = 'Notificações push ativadas!';
+    atualizarStatusPush('ativo', state.usuario?.alert_threshold || 51);
+    setTimeout(() => { msg.textContent = ''; msg.className = 'form-msg'; }, 3000);
+  } catch (err) {
+    msg.className = 'form-msg error';
+    msg.textContent = `Erro: ${err.message}`;
+    btn.disabled = false;
+    btn.textContent = 'Ativar notificações push';
+  }
+});
+
+// Desativar push
+document.getElementById('btn-push-optout').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-push-optout');
+  btn.disabled = true;
+  try {
+    if (swRegistration) {
+      const sub = await swRegistration.pushManager.getSubscription();
+      if (sub) {
+        await api.push.unsubscribe(sub.endpoint);
+        await sub.unsubscribe();
+      }
+    }
+    atualizarStatusPush('inativo');
+  } catch (err) {
+    console.error('[push] Erro ao desativar:', err.message);
+    btn.disabled = false;
+  }
+});
+
+// Threshold selector change (ALERT-04)
+document.getElementById('sel-threshold').addEventListener('change', async (e) => {
+  const threshold = parseInt(e.target.value);
+  try {
+    await api.push.setThreshold(threshold);
+    const msg = document.getElementById('push-msg');
+    msg.className = 'form-msg success';
+    msg.textContent = 'Threshold atualizado!';
+    setTimeout(() => { msg.textContent = ''; msg.className = 'form-msg'; }, 2000);
+  } catch (err) {
+    console.error('[push] Erro ao atualizar threshold:', err.message);
+  }
+});
+
 // ── Init ─────────────────────────────────────────────────
 carregarStats();
 // D-03: modo padrão é 'risco' — NÃO chamar carregarMapa() no startup para evitar estado misto (D-04)
 // carregarMapa() só é chamado quando o usuário clica [Ocorrências] no toggle
 carregarCamadaRisco(); // carrega choropleth no startup (modo padrão: risco)
 carregarSessao();
+
+// Registrar service worker para push notifications (D-11)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg => {
+      swRegistration = reg;
+      console.log('[sw] Registrado com sucesso');
+    })
+    .catch(err => console.error('[sw] Falha no registro:', err));
+}
 
 // Auto-refresh a cada 60s
 // Inclui camada de risco apenas quando modo é 'risco' (D-04 — não re-renderizar em modo ocorrências)

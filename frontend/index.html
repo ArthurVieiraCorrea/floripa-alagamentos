@@ -156,6 +156,44 @@
             <div id="lista-eventos-cal" class="lista-eventos-cal">
               <p class="loading">Carregando eventos...</p>
             </div>
+
+            <!-- Seção Notificações Push — só visível quando calendário conectado (D-01, D-02, D-03) -->
+            <div id="secao-notificacoes" class="secao-notificacoes" style="display:none">
+              <h3 class="secao-titulo">Notificações</h3>
+
+              <!-- Texto explicativo ANTES do botão de opt-in (ALERT-01, D-02) -->
+              <p class="notif-explainer">
+                Receba alertas push quando um evento do seu calendário cair em um bairro
+                com risco de alagamento acima do seu threshold configurado.
+                Funciona mesmo com o app fechado (requer browser compatível).
+              </p>
+
+              <!-- Indicador de status (D-02) -->
+              <div id="push-status" class="push-status">
+                <span id="push-status-icon" class="push-status-icon">&#9679;</span>
+                <span id="push-status-texto">Verificando...</span>
+              </div>
+
+              <!-- Botão opt-in / opt-out (D-02) -->
+              <button id="btn-push-optin" class="btn-secondary" style="display:none">
+                Ativar notificações push
+              </button>
+              <button id="btn-push-optout" class="btn-secondary btn-sm" style="display:none">
+                Desativar notificações push
+              </button>
+              <div id="push-msg" class="form-msg"></div>
+
+              <!-- Seletor de threshold (D-02, ALERT-04) — renderizado por JS -->
+              <div id="push-threshold-row" class="push-threshold-row" style="display:none">
+                <label for="sel-threshold">Alertar a partir de:</label>
+                <select id="sel-threshold" class="cal-select-bairro">
+                  <option value="1">Verde (qualquer risco)</option>
+                  <option value="26">Amarelo (26+)</option>
+                  <option value="51" selected>Laranja (51+) — padrão</option>
+                  <option value="76">Vermelho (76+)</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </aside>

@@ -57,4 +57,14 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ bairro }),
     }),
+
+  push: {
+    subscribe: (subscriptionJSON) =>
+      request('/push/subscribe', { method: 'POST', body: JSON.stringify(subscriptionJSON) }),
+    unsubscribe: (endpoint) =>
+      request('/push/unsubscribe', { method: 'DELETE', body: JSON.stringify({ endpoint }) }),
+    setThreshold: (threshold) =>
+      request('/push/threshold', { method: 'PATCH', body: JSON.stringify({ threshold }) }),
+    getVapidPublicKey: () => request('/push/vapid-public-key'),
+  },
 };
