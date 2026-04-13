@@ -31,6 +31,7 @@ const previsaoRouter    = require('./routes/previsao');
 const riscoRouter       = require('./routes/risco');
 const calendarRouter    = require('./routes/calendar');
 const pushRouter        = require('./routes/push');
+const alertasRouter     = require('./routes/alertas');
 const { initScheduler } = require('./jobs/scheduler');
 
 const webpush = require('web-push');
@@ -70,6 +71,7 @@ app.use('/api/previsao',    previsaoRouter);
 app.use('/api/risco',       riscoRouter);
 app.use('/api/calendar',    calendarRouter);
 app.use('/api/push',        pushRouter);
+app.use('/api/alertas',     alertasRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
