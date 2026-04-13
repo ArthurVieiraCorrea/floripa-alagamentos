@@ -30,7 +30,15 @@ const ocorrenciasRouter = require('./routes/ocorrencias');
 const previsaoRouter    = require('./routes/previsao');
 const riscoRouter       = require('./routes/risco');
 const calendarRouter    = require('./routes/calendar');
+const pushRouter        = require('./routes/push');
 const { initScheduler } = require('./jobs/scheduler');
+
+const webpush = require('web-push');
+webpush.setVapidDetails(
+  `mailto:${process.env.VAPID_EMAIL || 'admin@example.com'}`,
+  process.env.VAPID_PUBLIC_KEY || '',
+  process.env.VAPID_PRIVATE_KEY || ''
+);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -61,6 +69,7 @@ app.use('/api/ocorrencias', ocorrenciasRouter);
 app.use('/api/previsao',    previsaoRouter);
 app.use('/api/risco',       riscoRouter);
 app.use('/api/calendar',    calendarRouter);
+app.use('/api/push',        pushRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

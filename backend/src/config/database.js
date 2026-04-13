@@ -129,6 +129,29 @@ function initSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_cal_cache_usuario_start
       ON calendar_events_cache(usuario_id, start_time)
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      endpoint    TEXT    NOT NULL UNIQUE,
+      p256dh      TEXT    NOT NULL,
+      auth        TEXT    NOT NULL,
+      criado_em   TEXT    NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_push_subs_usuario
+      ON push_subscriptions(usuario_id)
+  `);
+
+  // Adicionar alert_threshold se não existir (migrações seguras para SQLite)
+  try {
+    db.run(`ALTER TABLE usuarios ADD COLUMN alert_threshold INTEGER NOT NULL DEFAULT 51`);
+  } catch (_) {
+    // Coluna já existe — ignorar silenciosamente
+  }
 }
 
 module.exports = { getDb };
