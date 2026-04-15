@@ -145,7 +145,7 @@
 | 4. Dashboard de Previsão | 0/3 | Not started | - |
 | 5. Integração Google Calendar | 2/3 | In Progress|  |
 | 6. Alertas e Notificações Push | 0/3 | Not started | - |
-| 7. Dados Históricos (Admin) | 0/3 | Not started | - |
+| 7. Dados Históricos (Admin) | 3/3 | Complete   | 2026-04-15 |
 
 ---
 
