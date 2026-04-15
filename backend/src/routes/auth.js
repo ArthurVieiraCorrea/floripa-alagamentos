@@ -114,7 +114,7 @@ router.get('/me', (req, res) => {
   }
   const db = getDb();
   const usuario = db.get(
-    `SELECT calendar_connected, calendar_disconnected FROM usuarios WHERE id = ?`,
+    `SELECT calendar_connected, calendar_disconnected, alert_threshold FROM usuarios WHERE id = ?`,
     [req.session.userId]
   );
 
@@ -124,6 +124,7 @@ router.get('/me', (req, res) => {
     nome:                  req.session.nome,
     calendar_connected:    usuario?.calendar_connected    ?? 0,
     calendar_disconnected: usuario?.calendar_disconnected ?? 0,
+    alert_threshold:       usuario?.alert_threshold       ?? 51,
   });
 });
 
