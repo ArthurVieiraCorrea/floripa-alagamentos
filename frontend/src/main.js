@@ -516,11 +516,13 @@ async function carregarSessao() {
       btnLogin.style.display  = 'none';
       userInfo.style.display  = 'flex';
       userNome.textContent    = usuario.nome || usuario.email;
+      document.getElementById('tab-btn-admin').style.display = 'inline-block';
       await carregarCalendario(usuario);
     } else {
       state.usuario = null;
       btnLogin.style.display  = 'inline-block';
       userInfo.style.display  = 'none';
+      document.getElementById('tab-btn-admin').style.display = 'none';
       carregarCalendario(null);
     }
   } catch (err) {
@@ -790,6 +792,181 @@ document.getElementById('btn-fechar-banner-alertas').addEventListener('click', a
     }
   } catch (err) {
     console.error('[alertas] Erro ao processar fechamento do banner:', err.message);
+  }
+});
+
+// ── Admin: importação CSV (Fase 7, HIST-01 / HIST-02 / HIST-03) ─────────────
+
+// Estado da prévia atual — usado pelo botão Confirmar
+let _adminPreviewLinhas = [];
+
+/**
+ * Renderiza o resumo numérico da prévia no #admin-resumo.
+ * @param {{ total_linhas, validas, duplicatas, erros }} data
+ */
+function renderizarResumoAdmin({ total_linhas, validas, duplicatas, erros }) {
+  const el = document.getElementById('admin-resumo');
+  el.innerHTML =
+    `<span>Total de linhas: <strong>${total_linhas}</strong></span>` +
+    `<span class="resumo-ok">✓ Novas: ${validas}</span>` +
+    `<span class="resumo-dup">⚠ Duplicatas: ${duplicatas}</span>` +
+    `<span class="resumo-erro">✗ Erros: ${erros}</span>`;
+}
+
+/**
+ * Renderiza a tabela de linhas válidas (novas) no #admin-table-novas.
+ * @param {Array} linhas
+ */
+function renderizarTabelaNovas(linhas) {
+  const tbody = document.querySelector('#admin-table-novas tbody');
+  if (!linhas.length) { tbody.innerHTML = ''; return; }
+  tbody.innerHTML = linhas.map(r => `
+    <tr>
+      <td>${r.linha}</td>
+      <td>${String(r.bairro).replace(/</g, '&lt;')}</td>
+      <td>${r.nivel}</td>
+      <td>${r.data.slice(0, 10)}</td>
+      <td>${r.latitude}</td>
+      <td>${r.longitude}</td>
+      <td>${r.descricao ? String(r.descricao).replace(/</g, '&lt;') : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+/**
+ * Renderiza erros de validação no #admin-tbody-erros.
+ * @param {Array} erros
+ */
+function renderizarTabelaErros(erros) {
+  const tbody = document.getElementById('admin-tbody-erros');
+  tbody.innerHTML = erros.map(r =>
+    `<tr><td>${r.linha}</td><td>${r.erros.join('; ')}</td></tr>`
+  ).join('');
+}
+
+/**
+ * Renderiza duplicatas no #admin-tbody-dup.
+ * @param {Array} dups
+ */
+function renderizarTabelaDups(dups) {
+  const tbody = document.getElementById('admin-tbody-dup');
+  tbody.innerHTML = dups.map(r =>
+    `<tr><td>${r.linha}</td><td>${String(r.bairro).replace(/</g, '&lt;')}</td>` +
+    `<td>${r.nivel}</td><td>${r.data.slice(0, 10)}</td><td>#${r.id_existente}</td></tr>`
+  ).join('');
+}
+
+// Botão: Visualizar Prévia
+document.getElementById('btn-admin-preview').addEventListener('click', async () => {
+  const btn  = document.getElementById('btn-admin-preview');
+  const msg  = document.getElementById('admin-msg');
+  const file = document.getElementById('admin-csv-input').files[0];
+
+  // Reset UI
+  document.getElementById('admin-preview-section').style.display = 'none';
+  document.getElementById('admin-resultado').style.display = 'none';
+  _adminPreviewLinhas = [];
+  msg.className = 'form-msg';
+  msg.textContent = '';
+
+  if (!file) {
+    msg.className = 'form-msg error';
+    msg.textContent = 'Selecione um arquivo CSV.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Processando...';
+
+  try {
+    const csvText = await file.text();
+    const data = await api.admin.preview(csvText);
+
+    renderizarResumoAdmin(data);
+    document.getElementById('admin-preview-section').style.display = 'block';
+
+    // Linhas novas
+    const secNovas = document.getElementById('admin-preview-novas');
+    if (data.preview.length > 0) {
+      renderizarTabelaNovas(data.preview);
+      secNovas.style.display = 'block';
+      _adminPreviewLinhas = data.preview;
+    } else {
+      secNovas.style.display = 'none';
+    }
+
+    // Erros de validação
+    const secErros = document.getElementById('admin-preview-erros');
+    if (data.erros_detalhe.length > 0) {
+      renderizarTabelaErros(data.erros_detalhe);
+      secErros.style.display = 'block';
+    } else {
+      secErros.style.display = 'none';
+    }
+
+    // Duplicatas
+    const secDup = document.getElementById('admin-preview-dup');
+    if (data.duplicatas_detalhe.length > 0) {
+      renderizarTabelaDups(data.duplicatas_detalhe);
+      secDup.style.display = 'block';
+    } else {
+      secDup.style.display = 'none';
+    }
+
+    if (data.preview.length === 0) {
+      msg.className = 'form-msg';
+      msg.textContent = data.erros > 0
+        ? 'Nenhuma linha válida para importar. Corrija os erros e tente novamente.'
+        : 'Todas as linhas já existem no banco (duplicatas).';
+    }
+  } catch (err) {
+    console.error('[admin] Erro na prévia:', err.message);
+    msg.className = 'form-msg error';
+    msg.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Visualizar Prévia';
+  }
+});
+
+// Botão: Confirmar Importação
+document.getElementById('btn-admin-confirmar').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-admin-confirmar');
+  const msg = document.getElementById('admin-msg');
+
+  if (!_adminPreviewLinhas.length) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Importando...';
+  msg.className = 'form-msg';
+  msg.textContent = '';
+
+  try {
+    const resultado = await api.admin.confirmar(_adminPreviewLinhas);
+
+    // Esconder prévia; exibir resultado
+    document.getElementById('admin-preview-section').style.display = 'none';
+    _adminPreviewLinhas = [];
+
+    const el = document.getElementById('admin-resultado');
+    const errosTxt = resultado.erros.length
+      ? `<div class="res-erro" style="margin-top:.5rem">✗ Erros ao inserir: ${resultado.erros.length}</div>`
+      : '';
+    el.innerHTML =
+      `<div class="res-ok">✓ ${resultado.inseridos} ocorrência(s) importada(s) com sucesso!</div>` +
+      `<div class="res-dup">⚠ ${resultado.duplicatas_ignoradas} duplicata(s) ignorada(s)</div>` +
+      errosTxt;
+    el.style.display = 'block';
+
+    // Limpar o file input para nova importação
+    document.getElementById('admin-csv-input').value = '';
+  } catch (err) {
+    console.error('[admin] Erro ao confirmar importação:', err.message);
+    msg.className = 'form-msg error';
+    msg.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirmar Importação';
   }
 });
 
