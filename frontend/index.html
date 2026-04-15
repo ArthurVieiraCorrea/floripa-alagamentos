@@ -67,6 +67,7 @@
           <button class="tab active" data-tab="registrar">Registrar</button>
           <button class="tab" data-tab="historico">Histórico</button>
           <button class="tab" data-tab="calendario">Calendário</button>
+          <button class="tab" data-tab="admin" id="tab-btn-admin" style="display:none">Admin</button>
         </div>
 
         <!-- Registrar -->
@@ -123,6 +124,81 @@
             <p class="loading">Carregando...</p>
           </div>
           <div id="paginacao" class="paginacao"></div>
+        </div>
+
+        <!-- Admin: importação de dados históricos (HIST-01, HIST-02, HIST-03) -->
+        <div class="tab-content" id="tab-admin">
+          <h2>Importar Dados Históricos</h2>
+          <p class="hint">
+            Importe ocorrências históricas via CSV para enriquecer o motor de risco.
+            O sistema valida, detecta duplicatas e exibe uma prévia antes de confirmar.
+          </p>
+
+          <!-- Formato esperado -->
+          <details class="admin-formato">
+            <summary>Formato do CSV</summary>
+            <p class="hint">Colunas obrigatórias: <code>latitude</code>, <code>longitude</code>, <code>bairro</code>, <code>nivel</code>, <code>data</code></p>
+            <p class="hint">Coluna opcional: <code>descricao</code></p>
+            <p class="hint">Nível aceita: <code>baixo</code>, <code>medio</code>, <code>alto</code>, <code>critico</code></p>
+            <p class="hint">Data aceita: <code>YYYY-MM-DD</code> ou <code>DD/MM/YYYY</code></p>
+            <pre class="admin-pre">latitude,longitude,bairro,nivel,data,descricao
+-27.5954,-48.5480,Centro,alto,2024-03-15,Rua Vidal Ramos alagada
+-27.6028,-48.5140,Campeche,medio,2024-03-15,</pre>
+          </details>
+
+          <!-- Upload -->
+          <div class="field admin-upload-row">
+            <label for="admin-csv-input">Arquivo CSV</label>
+            <input type="file" id="admin-csv-input" accept=".csv,text/csv,text/plain" />
+          </div>
+          <button id="btn-admin-preview" class="btn-primary">Visualizar Prévia</button>
+          <div id="admin-msg" class="form-msg"></div>
+
+          <!-- Prévia -->
+          <div id="admin-preview-section" style="display:none">
+            <div id="admin-resumo" class="admin-resumo"></div>
+
+            <!-- Tabela de linhas válidas (novas) -->
+            <div id="admin-preview-novas" style="display:none">
+              <h3>Linhas a importar</h3>
+              <div class="admin-table-wrap">
+                <table id="admin-table-novas" class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>#</th><th>Bairro</th><th>Nível</th><th>Data</th><th>Lat</th><th>Lng</th><th>Descrição</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <button id="btn-admin-confirmar" class="btn-primary">Confirmar Importação</button>
+            </div>
+
+            <!-- Erros de validação -->
+            <div id="admin-preview-erros" style="display:none">
+              <h3>Erros de validação</h3>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead><tr><th>Linha</th><th>Erros</th></tr></thead>
+                  <tbody id="admin-tbody-erros"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Duplicatas ignoradas -->
+            <div id="admin-preview-dup" style="display:none">
+              <h3>Duplicatas (não serão importadas)</h3>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead><tr><th>Linha</th><th>Bairro</th><th>Nível</th><th>Data</th><th>ID existente</th></tr></thead>
+                  <tbody id="admin-tbody-dup"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resultado final -->
+          <div id="admin-resultado" class="admin-resultado" style="display:none"></div>
         </div>
 
         <!-- Calendário Google -->

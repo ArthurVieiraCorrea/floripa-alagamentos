@@ -73,4 +73,22 @@ export const api = {
     marcarVisto: (ids) =>
       request('/alertas/marcar-visto', { method: 'POST', body: JSON.stringify({ ids }) }),
   },
+
+  admin: {
+    // Envia texto CSV raw; retorna prévia sem inserir nada (HIST-01, HIST-02)
+    preview: (csvText) =>
+      fetch(`${BASE}/admin/preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: csvText,
+      }).then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw Object.assign(new Error(body.erro || `HTTP ${res.status}`), { status: res.status });
+        return body;
+      }),
+
+    // Confirma importação das linhas aprovadas na prévia (HIST-03)
+    confirmar: (linhas) =>
+      request('/admin/confirmar', { method: 'POST', body: JSON.stringify({ linhas }) }),
+  },
 };
