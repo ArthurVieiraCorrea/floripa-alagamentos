@@ -65,6 +65,8 @@ export const api = {
       request('/push/unsubscribe', { method: 'DELETE', body: JSON.stringify({ endpoint }) }),
     setThreshold: (threshold) =>
       request('/push/threshold', { method: 'PATCH', body: JSON.stringify({ threshold }) }),
+    setAlertHours: (hours_before) =>
+      request('/push/alert-hours', { method: 'PATCH', body: JSON.stringify({ hours_before }) }),
     getVapidPublicKey: () => request('/push/vapid-public-key'),
   },
 
@@ -90,5 +92,13 @@ export const api = {
     // Confirma importação das linhas aprovadas na prévia (HIST-03)
     confirmar: (linhas) =>
       request('/admin/confirmar', { method: 'POST', body: JSON.stringify({ linhas }) }),
+
+    // Dispara recálculo imediato do motor de risco após importação
+    recalcular: () =>
+      request('/admin/recalcular', { method: 'POST' }),
+  },
+
+  previsao: {
+    atual: () => request('/previsao/atual'),
   },
 };

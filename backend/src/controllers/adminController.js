@@ -1,5 +1,6 @@
 'use strict';
 const { getDb } = require('../config/database');
+const { calcularRiscos } = require('../services/riskEngine');
 
 // ── Constantes ───────────────────────────────────────────
 const NIVEIS_VALIDOS = ['baixo', 'medio', 'alto', 'critico'];
@@ -251,6 +252,21 @@ const AdminController = {
     }
 
     res.json({ inseridos, duplicatas_ignoradas, erros });
+  },
+
+  /**
+   * POST /api/admin/recalcular
+   * Dispara calcularRiscos() imediatamente, sem esperar pelo próximo ciclo do cron.
+   * Útil após importação de dados históricos (HIST-03: lag de até 4h eliminado).
+   */
+  async recalcular(req, res) {
+    try {
+      await calcularRiscos();
+      res.json({ ok: true, mensagem: 'Risco recalculado com sucesso.' });
+    } catch (err) {
+      console.error('[admin] Erro ao recalcular riscos:', err.message);
+      res.status(500).json({ erro: 'Erro ao recalcular riscos.' });
+    }
   },
 };
 

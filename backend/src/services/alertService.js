@@ -8,8 +8,8 @@
 const webpush = require('web-push');
 const { getDb } = require('../config/database');
 
-// Janela de eventos relevantes: eventos que começam nas próximas 24h a partir de agora.
-const ALERT_WINDOW_HOURS = 24;
+// Janela padrão quando o usuário não configurou antecedência.
+const ALERT_WINDOW_HOURS_DEFAULT = 24;
 
 /**
  * Deriva a risk_cycle_key a partir do calculated_at de risk_scores.
@@ -128,7 +128,7 @@ async function checkAndSendAlerts() {
   let usuarios;
   try {
     usuarios = db.all(
-      `SELECT id, alert_threshold, calendar_disconnected
+      `SELECT id, alert_threshold, alert_hours_before, calendar_disconnected
          FROM usuarios
         WHERE calendar_connected = 1
           AND calendar_disconnected = 0`
@@ -144,13 +144,14 @@ async function checkAndSendAlerts() {
   }
 
   const now = new Date();
-  const windowEnd = new Date(now.getTime() + ALERT_WINDOW_HOURS * 60 * 60 * 1000);
 
   for (const usuario of usuarios) {
     try {
       const threshold = usuario.alert_threshold ?? 51;
+      const windowHours = usuario.alert_hours_before ?? ALERT_WINDOW_HOURS_DEFAULT;
+      const windowEnd = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
 
-      // Passo 3: Buscar eventos do cache nas próximas 24h com bairro resolvido
+      // Passo 3: Buscar eventos do cache na janela configurada pelo usuário
       let eventos;
       try {
         eventos = db.all(

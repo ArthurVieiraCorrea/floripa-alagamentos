@@ -79,4 +79,26 @@ router.patch('/threshold', requireAuth, (req, res) => {
   }
 });
 
+// PATCH /api/push/alert-hours
+// Body: { hours_before: number } — valores válidos: 1, 2, 6, 12, 24, 48
+// Atualiza antecedência de alerta do usuário autenticado.
+router.patch('/alert-hours', requireAuth, (req, res) => {
+  const { hours_before } = req.body;
+  const VALID_HOURS = [1, 2, 6, 12, 24, 48];
+  if (!VALID_HOURS.includes(Number(hours_before))) {
+    return res.status(400).json({ erro: 'hours_before deve ser 1, 2, 6, 12, 24 ou 48' });
+  }
+  const db = getDb();
+  try {
+    db.run(
+      `UPDATE usuarios SET alert_hours_before = ?, atualizado_em = datetime('now') WHERE id = ?`,
+      [Number(hours_before), req.session.userId]
+    );
+    res.json({ ok: true, hours_before: Number(hours_before) });
+  } catch (err) {
+    console.error('[push] Erro ao atualizar alert_hours_before:', err.message);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 module.exports = router;

@@ -20,6 +20,46 @@ const UTC_OFFSET = '-03:00';
 // Timeout de 10s para o fetch — evita conexões travadas penduradas no processo
 const FETCH_TIMEOUT_MS = 10_000;
 
+// Retry: 3 tentativas com 5s de espera entre elas
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 5_000;
+
+/**
+ * Aguarda N milissegundos.
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Tenta fetch do Open-Meteo com retry automático.
+ * Retorna os dados JSON ou lança erro após MAX_RETRIES tentativas.
+ * @returns {Promise<Object>}
+ */
+async function fetchWithRetry() {
+  let lastErr;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(OPEN_METEO_URL, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status} ${res.statusText}`);
+      return await res.json();
+    } catch (err) {
+      clearTimeout(timeoutId);
+      lastErr = err;
+      if (attempt < MAX_RETRIES) {
+        console.warn(`[forecast] Tentativa ${attempt}/${MAX_RETRIES} falhou: ${err.message}. Aguardando ${RETRY_DELAY_MS / 1000}s...`);
+        await sleep(RETRY_DELAY_MS);
+      }
+    }
+  }
+  throw lastErr;
+}
+
 /**
  * Busca previsão do Open-Meteo, normaliza e persiste em cache SQLite.
  * Nunca faz throw — em caso de erro, atualiza forecasts_meta.status='error' e retorna.
@@ -32,25 +72,9 @@ async function fetchAndCacheForecasts() {
 
   let data;
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-    let res;
-    try {
-      res = await fetch(OPEN_METEO_URL, { signal: controller.signal });
-    } finally {
-      clearTimeout(timeoutId);
-    }
-
-    if (!res.ok) {
-      throw new Error(`Open-Meteo HTTP ${res.status} ${res.statusText}`);
-    }
-
-    data = await res.json();
+    data = await fetchWithRetry();
   } catch (err) {
-    // INMET fallback: log aviso apenas — não há endpoint INMET confiável em v1
-    console.warn('[forecast] INMET não disponível como fallback (TLS failure confirmado). Servindo cache stale.');
-    console.error('[forecast] Fetch Open-Meteo falhou:', err.message);
+    console.error(`[forecast] Open-Meteo falhou após ${MAX_RETRIES} tentativas: ${err.message}. Servindo cache stale.`);
 
     try {
       db.run(

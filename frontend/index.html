@@ -58,6 +58,11 @@
       </div>
     </header>
 
+    <!-- Banner: previsão meteorológica desatualizada -->
+    <div id="banner-stale-forecast" class="banner-aviso" style="display:none">
+      ⚠ Dados de previsão desatualizados (última atualização há mais de 2h). O mapa de risco pode não refletir condições atuais.
+    </div>
+
     <!-- Main layout -->
     <main class="layout">
       <!-- Sidebar -->
@@ -199,6 +204,12 @@
 
           <!-- Resultado final -->
           <div id="admin-resultado" class="admin-resultado" style="display:none"></div>
+
+          <!-- Recalcular risco após importação -->
+          <div id="admin-recalcular-section" style="display:none; margin-top:1rem">
+            <button id="btn-admin-recalcular" class="btn-secondary">Recalcular Risco Agora</button>
+            <span id="admin-recalcular-msg" class="form-msg" style="margin-left:.75rem"></span>
+          </div>
         </div>
 
         <!-- Calendário Google -->
@@ -276,6 +287,19 @@
                   <option value="26">Amarelo (26+)</option>
                   <option value="51" selected>Laranja (51+) — padrão</option>
                   <option value="76">Vermelho (76+)</option>
+                </select>
+              </div>
+
+              <!-- Seletor de antecedência — renderizado por JS junto com threshold -->
+              <div id="push-hours-row" class="push-threshold-row" style="display:none">
+                <label for="sel-alert-hours">Avisar com antecedência de:</label>
+                <select id="sel-alert-hours" class="cal-select-bairro">
+                  <option value="1">1 hora</option>
+                  <option value="2">2 horas</option>
+                  <option value="6">6 horas</option>
+                  <option value="12">12 horas</option>
+                  <option value="24" selected>24 horas — padrão</option>
+                  <option value="48">48 horas</option>
                 </select>
               </div>
             </div>

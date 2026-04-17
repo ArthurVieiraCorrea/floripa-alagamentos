@@ -177,6 +177,13 @@ function initSchema(db) {
   } catch (_) {
     // Coluna já existe — ignorar silenciosamente
   }
+
+  // Adicionar alert_hours_before se não existir — antecedência configurável (padrão: 24h)
+  try {
+    db.run(`ALTER TABLE usuarios ADD COLUMN alert_hours_before INTEGER NOT NULL DEFAULT 24`);
+  } catch (_) {
+    // Coluna já existe — ignorar silenciosamente
+  }
 }
 
 module.exports = { getDb };

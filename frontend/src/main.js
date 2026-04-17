@@ -455,7 +455,7 @@ async function carregarCalendario(usuario) {
 
   // D-01, D-03: exibir seção Notificações e verificar status push
   document.getElementById('secao-notificacoes').style.display = 'block';
-  verificarStatusPush(usuario?.alert_threshold || 51);
+  verificarStatusPush(usuario?.alert_threshold || 51, usuario?.alert_hours_before ?? 24);
 }
 
 // ── Calendar: connect / disconnect ──────────────────────
@@ -537,25 +537,32 @@ async function carregarSessao() {
  * @param {'ativo'|'inativo'|'negado'|'sem-suporte'} status
  * @param {number} [threshold] — alert_threshold do usuário para pré-selecionar o <select>
  */
-function atualizarStatusPush(status, threshold) {
+function atualizarStatusPush(status, threshold, hoursBeforeArg) {
   const icon  = document.getElementById('push-status-icon');
   const texto = document.getElementById('push-status-texto');
   const btnOn  = document.getElementById('btn-push-optin');
   const btnOff = document.getElementById('btn-push-optout');
   const thRow  = document.getElementById('push-threshold-row');
+  const hoursRow = document.getElementById('push-hours-row');
 
-  btnOn.style.display  = 'none';
-  btnOff.style.display = 'none';
-  thRow.style.display  = 'none';
+  btnOn.style.display    = 'none';
+  btnOff.style.display   = 'none';
+  thRow.style.display    = 'none';
+  hoursRow.style.display = 'none';
 
   if (status === 'ativo') {
     icon.style.color  = '#22c55e';
     texto.textContent = 'Notificações push ativas';
-    btnOff.style.display = 'inline-block';
-    thRow.style.display  = 'flex';
+    btnOff.style.display   = 'inline-block';
+    thRow.style.display    = 'flex';
+    hoursRow.style.display = 'flex';
     if (threshold !== undefined) {
       const sel = document.getElementById('sel-threshold');
       if (sel) sel.value = String(threshold);
+    }
+    if (hoursBeforeArg !== undefined) {
+      const selH = document.getElementById('sel-alert-hours');
+      if (selH) selH.value = String(hoursBeforeArg);
     }
   } else if (status === 'negado') {
     icon.style.color  = '#ef4444';
@@ -575,8 +582,9 @@ function atualizarStatusPush(status, threshold) {
  * Verifica se o usuário já tem subscription ativa e atualiza a UI.
  * Chamado ao renderizar o estado "conectado".
  * @param {number} [threshold] — alert_threshold do usuário
+ * @param {number} [hoursBefore] — alert_hours_before do usuário
  */
-async function verificarStatusPush(threshold) {
+async function verificarStatusPush(threshold, hoursBefore) {
   if (!('Notification' in window) || !('serviceWorker' in navigator)) {
     atualizarStatusPush('sem-suporte');
     return;
@@ -586,11 +594,11 @@ async function verificarStatusPush(threshold) {
     return;
   }
   if (!swRegistration) {
-    atualizarStatusPush('inativo', threshold);
+    atualizarStatusPush('inativo', threshold, hoursBefore);
     return;
   }
   const sub = await swRegistration.pushManager.getSubscription();
-  atualizarStatusPush(sub ? 'ativo' : 'inativo', threshold);
+  atualizarStatusPush(sub ? 'ativo' : 'inativo', threshold, hoursBefore);
 }
 
 // ── Alertas in-app (ALERT-05) ────────────────────────────
@@ -727,7 +735,7 @@ document.getElementById('btn-push-optin').addEventListener('click', async () => 
     await api.push.subscribe(subscription.toJSON());
     msg.className = 'form-msg success';
     msg.textContent = 'Notificações push ativadas!';
-    atualizarStatusPush('ativo', state.usuario?.alert_threshold || 51);
+    atualizarStatusPush('ativo', state.usuario?.alert_threshold || 51, state.usuario?.alert_hours_before ?? 24);
     setTimeout(() => { msg.textContent = ''; msg.className = 'form-msg'; }, 3000);
   } catch (err) {
     msg.className = 'form-msg error';
@@ -960,6 +968,9 @@ document.getElementById('btn-admin-confirmar').addEventListener('click', async (
 
     // Limpar o file input para nova importação
     document.getElementById('admin-csv-input').value = '';
+
+    // Exibir botão de recálculo imediato
+    document.getElementById('admin-recalcular-section').style.display = 'block';
   } catch (err) {
     console.error('[admin] Erro ao confirmar importação:', err.message);
     msg.className = 'form-msg error';
@@ -970,12 +981,55 @@ document.getElementById('btn-admin-confirmar').addEventListener('click', async (
   }
 });
 
+// Botão: Recalcular Risco Agora
+document.getElementById('btn-admin-recalcular').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-admin-recalcular');
+  const msg = document.getElementById('admin-recalcular-msg');
+  btn.disabled = true;
+  btn.textContent = 'Recalculando...';
+  msg.className = 'form-msg';
+  msg.textContent = '';
+  try {
+    await api.admin.recalcular();
+    msg.className = 'form-msg success';
+    msg.textContent = '✓ Risco recalculado! O mapa será atualizado no próximo refresh.';
+  } catch (err) {
+    console.error('[admin] Erro ao recalcular:', err.message);
+    msg.className = 'form-msg error';
+    msg.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Recalcular Risco Agora';
+  }
+});
+
+// Seletor de antecedência de alerta
+document.getElementById('sel-alert-hours').addEventListener('change', async (e) => {
+  const hours_before = parseInt(e.target.value);
+  try {
+    await api.push.setAlertHours(hours_before);
+    const msg = document.getElementById('push-msg');
+    msg.className = 'form-msg success';
+    msg.textContent = 'Antecedência atualizada!';
+    setTimeout(() => { msg.textContent = ''; msg.className = 'form-msg'; }, 2000);
+  } catch (err) {
+    console.error('[push] Erro ao atualizar antecedência:', err.message);
+  }
+});
+
 // ── Init ─────────────────────────────────────────────────
 carregarStats();
 // D-03: modo padrão é 'risco' — NÃO chamar carregarMapa() no startup para evitar estado misto (D-04)
 // carregarMapa() só é chamado quando o usuário clica [Ocorrências] no toggle
 carregarCamadaRisco(); // carrega choropleth no startup (modo padrão: risco)
 carregarSessao().then(() => verificarAlertasPendentes()); // D-05: verificar alertas ao carregar
+
+// Verificar staleness da previsão meteorológica ao carregar
+api.previsao.atual().then(data => {
+  if (data?.stale) {
+    document.getElementById('banner-stale-forecast').style.display = 'block';
+  }
+}).catch(() => { /* silencioso — não bloquear init */ });
 
 // Registrar service worker para push notifications (D-11)
 if ('serviceWorker' in navigator) {

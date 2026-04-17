@@ -22,4 +22,7 @@ router.post('/preview', requireAuth, csvText, AdminController.preview);
 // POST /api/admin/confirmar
 router.post('/confirmar', requireAuth, express.json(), AdminController.confirmar);
 
+// POST /api/admin/recalcular — dispara recálculo imediato do motor de risco
+router.post('/recalcular', requireAuth, AdminController.recalcular);
+
 module.exports = router;

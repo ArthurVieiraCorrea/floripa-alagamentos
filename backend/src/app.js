@@ -1,3 +1,4 @@
+require('dotenv').config();
 // Fail fast if required env vars are missing — prevents silent failures mid-request.
 const REQUIRED_ENV = [
   'GOOGLE_CLIENT_ID',
@@ -106,3 +107,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
