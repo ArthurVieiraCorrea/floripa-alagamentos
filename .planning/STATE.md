@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-04-15T18:55:40.881Z"
+status: completed
+last_updated: "2026-04-17T13:57:01.811Z"
 progress:
   total_phases: 7
   completed_phases: 7
@@ -20,21 +20,20 @@ progress:
 
 ## Project Reference
 
+See: .planning/PROJECT.md (updated 2026-04-17)
+
 **Core Value:** Avisar o usuário antes de ir a um lugar que pode estar alagado — não depois.
-**Milestone:** v1 — Sistema de Alerta de Alagamentos
-**Current Focus:** Phase 07 — dados-historicos-admin
+**Current focus:** v1.1 Resiliência & UX — planning next milestone
 
 ---
 
 ## Current Position
 
-Phase: 07 (dados-historicos-admin) — EXECUTING
-Plan: 2 of 3
-**Status:** Ready to execute
-**Overall Progress:** 21/21 plans complete (all phases done)
+**Status:** ✅ v1.0 MVP shipped (2026-04-17)
+**Overall Progress:** 21/21 plans complete — all phases done
 
 ```
-[████████████████████████████░░░░] 86% (6 of 7 phases)
+[████████████████████████████████] 100%
 ```
 
 ---
@@ -79,23 +78,15 @@ Plan: 2 of 3
 
 ### Blockers / Risks
 
-- GeoJSON dos bairros de Florianópolis não está no repositório — precisa ser localizado ou criado antes da Fase 4
-- Endpoints INMET têm confiança LOW (STACK.md) — validar empiricamente antes de implementar fallback na Fase 2
-- Permissões Google Cloud Console (habilitar Calendar API, configurar redirect URIs) são pré-requisito humano antes da Fase 1
-
-### Todos (cross-phase)
-
-- [ ] Obter/criar GeoJSON dos bairros de Florianópolis (necessário para Fase 4)
-- [ ] Criar projeto no Google Cloud Console e habilitar Calendar API antes de iniciar Fase 1
-- [ ] Verificar empiricamente endpoints INMET antes de implementar Fase 2
+Nenhum blocker ativo. v1.0 shipped.
 
 ---
 
 ## Session Continuity
 
-**Last session:** 2026-04-15T18:55:40.865Z
-**Next action:** v1 milestone complete — security review, deployment, or backlog items
+**Last session:** 2026-04-17
+**Next action:** `/gsd-new-milestone` para iniciar v1.1
 
 ---
 
-*Last updated: 2026-04-13 after completing Phase 06*
+*Last updated: 2026-04-17 after v1.0 milestone*
