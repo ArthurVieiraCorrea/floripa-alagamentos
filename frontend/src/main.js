@@ -968,9 +968,6 @@ document.getElementById('btn-admin-confirmar').addEventListener('click', async (
 
     // Limpar o file input para nova importação
     document.getElementById('admin-csv-input').value = '';
-
-    // Exibir botão de recálculo imediato
-    document.getElementById('admin-recalcular-section').style.display = 'block';
   } catch (err) {
     console.error('[admin] Erro ao confirmar importação:', err.message);
     msg.className = 'form-msg error';
@@ -978,28 +975,6 @@ document.getElementById('btn-admin-confirmar').addEventListener('click', async (
   } finally {
     btn.disabled = false;
     btn.textContent = 'Confirmar Importação';
-  }
-});
-
-// Botão: Recalcular Risco Agora
-document.getElementById('btn-admin-recalcular').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-admin-recalcular');
-  const msg = document.getElementById('admin-recalcular-msg');
-  btn.disabled = true;
-  btn.textContent = 'Recalculando...';
-  msg.className = 'form-msg';
-  msg.textContent = '';
-  try {
-    await api.admin.recalcular();
-    msg.className = 'form-msg success';
-    msg.textContent = '✓ Risco recalculado! O mapa será atualizado no próximo refresh.';
-  } catch (err) {
-    console.error('[admin] Erro ao recalcular:', err.message);
-    msg.className = 'form-msg error';
-    msg.textContent = err.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Recalcular Risco Agora';
   }
 });
 
