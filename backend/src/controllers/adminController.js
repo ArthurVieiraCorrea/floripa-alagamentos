@@ -1,6 +1,7 @@
 'use strict';
 const { getDb } = require('../config/database');
 const { calcularRiscos } = require('../services/riskEngine');
+const { checkAndSendAlerts } = require('../services/alertService');
 
 // ── Constantes ───────────────────────────────────────────
 const NIVEIS_VALIDOS = ['baixo', 'medio', 'alto', 'critico'];
@@ -203,7 +204,7 @@ const AdminController = {
    * Recebe JSON { linhas: [...] } com as linhas previamente validadas.
    * Re-verifica duplicatas e insere; retorna { inseridos, duplicatas_ignoradas, erros }.
    */
-  confirmar(req, res) {
+  async confirmar(req, res) {
     const { linhas } = req.body || {};
     if (!Array.isArray(linhas) || linhas.length === 0) {
       return res.status(400).json({ erro: 'Nenhuma linha para importar.' });
@@ -251,7 +252,17 @@ const AdminController = {
       }
     }
 
-    res.json({ inseridos, duplicatas_ignoradas, erros });
+    // Auto-trigger best-effort: recalcular riscos e verificar alertas após importação (D-04, D-07)
+    let recalculo = 'ok';
+    try {
+      await calcularRiscos();
+      await checkAndSendAlerts();
+    } catch (err) {
+      console.error('[admin] Erro no recálculo automático pós-confirmar:', err.message);
+      recalculo = 'erro';
+    }
+
+    res.json({ inseridos, duplicatas_ignoradas, erros, recalculo });
   },
 
   /**
@@ -262,6 +273,7 @@ const AdminController = {
   async recalcular(req, res) {
     try {
       await calcularRiscos();
+      await checkAndSendAlerts();
       res.json({ ok: true, mensagem: 'Risco recalculado com sucesso.' });
     } catch (err) {
       console.error('[admin] Erro ao recalcular riscos:', err.message);
