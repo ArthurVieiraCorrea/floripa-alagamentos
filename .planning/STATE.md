@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-04-17T13:57:01.811Z"
+milestone: v1.1
+milestone_name: Resiliência & UX
+status: executing
+last_updated: "2026-04-19T00:00:00.000Z"
+last_activity: 2026-04-19 -- Phase 08 complete (RESIL-01, RESIL-02)
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 21
-  completed_plans: 21
-  percent: 100
+  total_phases: 3
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+  percent: 33
 ---
 
 # State: Floripa Alagamentos
@@ -23,32 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core Value:** Avisar o usuário antes de ir a um lugar que pode estar alagado — não depois.
-**Current focus:** v1.1 Resiliência & UX — planning next milestone
+**Current focus:** Phase 09 — ux-improvements
 
 ---
 
 ## Current Position
 
-**Status:** ✅ v1.0 MVP shipped (2026-04-17)
-**Overall Progress:** 21/21 plans complete — all phases done
+Phase: 08 (backend-resilience) — COMPLETE ✓
+Plan: 2 of 2
+Status: Phase 08 verified and complete
+Last activity: 2026-04-19 -- Phase 08 complete (RESIL-01, RESIL-02)
 
-```
-[████████████████████████████████] 100%
-```
-
----
-
-## Phase Status
-
-| Phase | Status | Plans Done |
-|-------|--------|-----------|
-| 1. Autenticação | Complete | 3/3 |
-| 2. Integração Meteorológica | Complete | 3/3 |
-| 3. Motor de Risco | Complete | 3/3 |
-| 4. Dashboard de Previsão | Complete | 3/3 |
-| 5. Integração Google Calendar | Complete | 3/3 |
-| 6. Alertas e Notificações Push | Complete | 3/3 |
-| 7. Dados Históricos (Admin) | Complete | 3/3 |
+Progress: [███░░░░░░░] 33% (v1.1)
 
 ---
 
@@ -58,35 +45,27 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 | Decision | Rationale |
 |----------|-----------|
-| Open-Meteo como fonte primária de precipitação | INMET tem baixa confiabilidade documentada (PITFALLS.md); Open-Meteo é REST+JSON sem API key, granularidade horária, SLA superior |
-| Web Push (VAPID) incluído em v1 | REQUIREMENTS.md inclui ALERT-01; in-app polling como fallback (ALERT-05) para iOS/browsers sem subscription |
-| Fase 7 (Admin/Histórico) separada das demais | Motor de risco (Fase 3) já usa `ocorrencias` existente; importação CSV é enriquecimento, não pré-requisito |
-| node-cron no mesmo processo Express | Single-process deployment constraint; bull/agenda exigem Redis/Mongo |
-| initScheduler() chamado antes de app.listen() | Garante que initSchema() já rodou via session middleware antes do warm-up do scheduler |
-| stale=true threshold de 120min | 2x o intervalo do cron — tolera falhas transitórias de rede sem alarme falso |
-| Criação de ocorrências permanece pública | AUTH-04 explícito; apenas deleção exige auth |
-| Dual mount authRouter em /auth e /api/auth | Router único, dois prefixos — evita duplicar definições de rotas |
-| prompt:'consent' obrigatório no generateAuthUrl | Sem ele, Google omite refresh_token em logins repetidos, quebrando silenciosamente a Fase 5 |
+| Open-Meteo como fonte primária de precipitação | INMET TLS failure confirmado; Open-Meteo REST+JSON sem API key, SLA superior |
+| stale=true threshold de 120min | 2x o intervalo do cron — tolera falhas transitórias sem alarme falso |
+| Retry backoff em Phase 8, UI stale banner em Phase 9 | Backend resilience desacoplada da apresentação — Phase 8 pode ser verificada independentemente |
+| Onboarding em phase separada (10) | Depende de DB migration + nova rota + módulo frontend — escopo maior que o restante do UX |
+| UX-01 (alert lead time selector) em Phase 9 | Campo alert_threshold já existe no banco (v1.0 ALERT-04); Phase 9 só precisa fiar o seletor ao PATCH existente |
 
-### Architecture Notes
+### Pending Todos
 
-- `googleapis` para OAuth2 + Calendar (não passport-google-oauth20 — esse é para login-only, não delegated Calendar access)
-- `express-session` com store SQLite para sessão persistente (AUTH-02)
-- `refresh_token` criptografado com AES-256-GCM, chave em `ENCRYPTION_KEY` env var
-- Service worker em `frontend/public/sw.js` (Vite copia `public/` verbatim para `dist/`)
-- GeoJSON dos bairros de Florianópolis necessário para choropleth — ainda não presente no codebase
+None.
 
 ### Blockers / Risks
 
-Nenhum blocker ativo. v1.0 shipped.
+Nenhum blocker ativo.
 
 ---
 
 ## Session Continuity
 
-**Last session:** 2026-04-17
-**Next action:** `/gsd-new-milestone` para iniciar v1.1
+**Last session:** 2026-04-19
+**Next action:** `/gsd-plan-phase 09` — UX improvements (stale forecast banner, alert lead time selector)
 
 ---
 
-*Last updated: 2026-04-17 after v1.0 milestone*
+*Last updated: 2026-04-19 after Phase 08 complete*
