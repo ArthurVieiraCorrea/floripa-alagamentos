@@ -52,8 +52,9 @@ async function fetchWithRetry() {
       clearTimeout(timeoutId);
       lastErr = err;
       if (attempt < MAX_RETRIES) {
-        console.warn(`[forecast] Tentativa ${attempt}/${MAX_RETRIES} falhou: ${err.message}. Aguardando ${RETRY_DELAY_MS / 1000}s...`);
-        await sleep(RETRY_DELAY_MS);
+        const waitMs = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+        console.warn(`[forecast] Tentativa ${attempt}/${MAX_RETRIES} falhou: ${err.message}. Aguardando ${waitMs / 1000}s...`);
+        await sleep(waitMs);
       }
     }
   }
