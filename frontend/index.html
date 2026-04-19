@@ -72,6 +72,7 @@
           <button class="tab active" data-tab="registrar">Registrar</button>
           <button class="tab" data-tab="historico">Histórico</button>
           <button class="tab" data-tab="calendario">Calendário</button>
+          <button class="tab" data-tab="status" id="tab-btn-status" style="display:none">Status</button>
           <button class="tab" data-tab="admin" id="tab-btn-admin" style="display:none">Admin</button>
         </div>
 
@@ -296,6 +297,34 @@
                   <option value="24" selected>24 horas — padrão</option>
                   <option value="48">48 horas</option>
                 </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- UX-02: Status do sistema — apenas leitura, auth-only -->
+        <div class="tab-content" id="tab-status">
+          <h2>Status do Sistema</h2>
+          <div id="status-indicadores" class="status-indicadores">
+            <div class="status-indicador">
+              <span class="status-dot" id="status-dot-forecast">&#9679;</span>
+              <div class="status-info">
+                <span class="status-label">Previsão meteorológica</span>
+                <span class="status-detalhe" id="status-detalhe-forecast">Verificando...</span>
+              </div>
+            </div>
+            <div class="status-indicador">
+              <span class="status-dot" id="status-dot-calendar">&#9679;</span>
+              <div class="status-info">
+                <span class="status-label">Google Calendar</span>
+                <span class="status-detalhe" id="status-detalhe-calendar">—</span>
+              </div>
+            </div>
+            <div class="status-indicador">
+              <span class="status-dot" id="status-dot-push">&#9679;</span>
+              <div class="status-info">
+                <span class="status-label">Notificações push</span>
+                <span class="status-detalhe" id="status-detalhe-push">—</span>
               </div>
             </div>
           </div>
