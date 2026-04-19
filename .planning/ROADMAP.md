@@ -43,8 +43,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
   4. A rota de recálculo manual é protegida — apenas admins autenticados podem acioná-la
 **Plans**: 2 plans
 Plans:
-- [ ] 08-01-PLAN.md — Backoff exponencial em fetchWithRetry() (RESIL-02)
-- [ ] 08-02-PLAN.md — Auto-trigger recálculo em confirmar() + checkAndSendAlerts em recalcular() + frontend cleanup (RESIL-01)
+- [x] 08-01-PLAN.md — Backoff exponencial em fetchWithRetry() (RESIL-02)
+- [x] 08-02-PLAN.md — Auto-trigger recálculo em confirmar() + checkAndSendAlerts em recalcular() + frontend cleanup (RESIL-01)
 
 ### Phase 9: Frontend UX
 **Goal**: O usuário vê em tempo real se os dados são confiáveis, controla quando quer ser alertado e consulta o histórico de alertas que recebeu
@@ -55,8 +55,11 @@ Plans:
   2. Usuário autenticado pode mover um seletor de 1h a 48h e o novo valor de antecedência é salvo e aplicado nos alertas seguintes
   3. Usuário vê painel de status com o estado atual de: frescor do forecast, sincronização do calendar e push ativo/inativo
   4. Usuário vê lista dos alertas que recebeu, com bairro, horário e evento do calendar associado
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+Plans:
+- [ ] 09-01-PLAN.md — Aba Status: 3 indicadores de sistema em tempo real (UX-02)
+- [ ] 09-02-PLAN.md — Aba Alertas: backend /historico + lista paginada de alertas recebidos (UX-03)
+- [ ] 09-03-PLAN.md — Smoke test: verificar RESIL-03 (banner stale) e UX-01 (seletor antecedência)
 
 ### Phase 10: Onboarding Wizard
 **Goal**: Novo usuário que faz login pela primeira vez é guiado por um wizard de 3 passos e sai com calendar conectado e push ativo
@@ -83,7 +86,7 @@ Plans:
 | 6. Alertas e Notificações Push | v1.0 | 3/3 | Complete | 2026-04-14 |
 | 7. Dados Históricos Admin | v1.0 | 3/3 | Complete | 2026-04-15 |
 | 8. Backend Resilience | v1.1 | 0/2 | Not started | - |
-| 9. Frontend UX | v1.1 | 0/TBD | Not started | - |
+| 9. Frontend UX | v1.1 | 0/3 | Not started | - |
 | 10. Onboarding Wizard | v1.1 | 0/TBD | Not started | - |
 
 ---
