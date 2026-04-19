@@ -324,6 +324,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
     if (tab.dataset.tab === 'historico') carregarHistorico();
     if (tab.dataset.tab === 'calendario') verificarAlertasPendentes(); // D-04: re-checar ao abrir aba
+    if (tab.dataset.tab === 'status') carregarStatus();
   });
 });
 
@@ -502,6 +503,64 @@ document.getElementById('btn-desconectar-cal').addEventListener('click', async (
   }
 });
 
+// ── Status do sistema (UX-02) ────────────────────────────
+async function carregarStatus() {
+  // Forecast freshness — chama API (já cacheada pelo browser, custo baixo)
+  const dotF = document.getElementById('status-dot-forecast');
+  const detF = document.getElementById('status-detalhe-forecast');
+  try {
+    const data = await api.previsao.atual();
+    if (data?.stale) {
+      dotF.style.color = '#ef4444';  // --risco-vermelho
+      const mins = data.last_updated
+        ? Math.round((Date.now() - new Date(data.last_updated + 'Z')) / 60000)
+        : '?';
+      const horas = Math.floor(mins / 60);
+      const resto = mins % 60;
+      detF.textContent = `Desatualizado (há ${horas > 0 ? horas + 'h' : ''}${resto}min)`;
+    } else {
+      dotF.style.color = '#22c55e';  // --risco-verde
+      detF.textContent = 'Atualizado';
+    }
+  } catch {
+    dotF.style.color = '#94a3b8';  // --text-muted
+    detF.textContent = 'Indisponível';
+  }
+
+  // Calendar connection — derivado de state.usuario (já populado por carregarSessao)
+  const dotC = document.getElementById('status-dot-calendar');
+  const detC = document.getElementById('status-detalhe-calendar');
+  const u = state.usuario;
+  if (u?.calendar_connected === 1 && u?.calendar_disconnected !== 1) {
+    dotC.style.color = '#22c55e';
+    detC.textContent = 'Conectado';
+  } else if (u?.calendar_disconnected === 1) {
+    dotC.style.color = '#ef4444';
+    detC.textContent = 'Desconectado (token expirado)';
+  } else {
+    dotC.style.color = '#f59e0b';  // --risco-amarelo
+    detC.textContent = 'Não conectado';
+  }
+
+  // Push status — consulta subscription em tempo real
+  const dotP = document.getElementById('status-dot-push');
+  const detP = document.getElementById('status-detalhe-push');
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    dotP.style.color = '#94a3b8';
+    detP.textContent = 'Não suportado pelo browser';
+  } else if (Notification.permission === 'denied') {
+    dotP.style.color = '#ef4444';
+    detP.textContent = 'Bloqueado pelo browser';
+  } else if (swRegistration) {
+    const sub = await swRegistration.pushManager.getSubscription();
+    dotP.style.color = sub ? '#22c55e' : '#f59e0b';
+    detP.textContent = sub ? 'Ativo' : 'Inativo';
+  } else {
+    dotP.style.color = '#f59e0b';
+    detP.textContent = 'Inativo';
+  }
+}
+
 // ── Sessão / Auth ────────────────────────────────────────
 async function carregarSessao() {
   try {
@@ -517,12 +576,14 @@ async function carregarSessao() {
       userInfo.style.display  = 'flex';
       userNome.textContent    = usuario.nome || usuario.email;
       document.getElementById('tab-btn-admin').style.display = 'inline-block';
+      document.getElementById('tab-btn-status').style.display = 'inline-block';
       await carregarCalendario(usuario);
     } else {
       state.usuario = null;
       btnLogin.style.display  = 'inline-block';
       userInfo.style.display  = 'none';
       document.getElementById('tab-btn-admin').style.display = 'none';
+      document.getElementById('tab-btn-status').style.display = 'none';
       carregarCalendario(null);
     }
   } catch (err) {
