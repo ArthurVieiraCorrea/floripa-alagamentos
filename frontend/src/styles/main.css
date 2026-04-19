@@ -479,3 +479,45 @@ html, body { height: 100%; font-family: system-ui, sans-serif; background: var(-
 .admin-resultado .res-ok   { color: var(--baixo);  font-weight: 700; font-size: 1.1em; }
 .admin-resultado .res-dup  { color: var(--medio);   font-weight: 700; }
 .admin-resultado .res-erro { color: var(--alto);    font-weight: 700; }
+
+/* ── Phase 9 UX-02: Status panel ─────────────────────────── */
+.status-indicadores {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  margin-top: .5rem;
+}
+
+.status-indicador {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .65rem .8rem;
+}
+
+.status-dot {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--text-muted); /* cor padrão sobrescrita por JS */
+  flex-shrink: 0;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+
+.status-label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.status-detalhe {
+  font-size: .75rem;
+  color: var(--text-muted);
+}
