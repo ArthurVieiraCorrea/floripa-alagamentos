@@ -68,4 +68,37 @@ router.post('/marcar-visto', requireAuth, (req, res) => {
   }
 });
 
+// GET /api/alertas/historico
+// Retorna todos os alertas do usuário autenticado (incluindo vistos), 20 por página.
+// Parâmetro: ?pagina=N (padrão: 1)
+// Resposta: { alertas: [...], paginacao: { pagina, paginas, total } }
+router.get('/historico', requireAuth, (req, res) => {
+  const db = getDb();
+  const pagina = Math.max(1, parseInt(req.query.pagina) || 1);
+  const limite = 20;
+  const offset = (pagina - 1) * limite;
+  try {
+    const total = db.get(
+      `SELECT COUNT(*) as total FROM alertas_enviados WHERE usuario_id = ?`,
+      [req.session.userId]
+    );
+    const alertas = db.all(
+      `SELECT id, bairro, summary, enviado_em
+         FROM alertas_enviados
+        WHERE usuario_id = ?
+        ORDER BY enviado_em DESC
+        LIMIT ? OFFSET ?`,
+      [req.session.userId, limite, offset]
+    );
+    const totalPaginas = Math.ceil((total?.total || 0) / limite);
+    res.json({
+      alertas: alertas || [],
+      paginacao: { pagina, paginas: totalPaginas, total: total?.total || 0 }
+    });
+  } catch (err) {
+    console.error('[alertas] Erro ao buscar historico:', err.message);
+    res.status(500).json({ erro: 'Erro interno' });
+  }
+});
+
 module.exports = router;
