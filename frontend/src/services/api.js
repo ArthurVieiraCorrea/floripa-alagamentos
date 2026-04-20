@@ -74,6 +74,7 @@ export const api = {
     pendentes: () => request('/alertas/pendentes'),
     marcarVisto: (ids) =>
       request('/alertas/marcar-visto', { method: 'POST', body: JSON.stringify({ ids }) }),
+    historico: (pagina = 1) => request(`/alertas/historico?pagina=${pagina}`),
   },
 
   admin: {

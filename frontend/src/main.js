@@ -41,6 +41,7 @@ const state = {
   horizonteAtivo: 24,             // 24 | 48 | 72 — D-05 default: 24h
   geojsonBairros: null,           // cache do fetch de bairros.geojson — fetch uma única vez
   usuario: null,                  // usuário autenticado atual (com alert_threshold)
+  paginaAlertas: 1,               // Phase 09 UX-03: paginação independente para aba Alertas
 };
 
 // Declarado aqui para estar disponível quando os controles forem inicializados (evita TDZ)
@@ -325,6 +326,10 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (tab.dataset.tab === 'historico') carregarHistorico();
     if (tab.dataset.tab === 'calendario') verificarAlertasPendentes(); // D-04: re-checar ao abrir aba
     if (tab.dataset.tab === 'status') carregarStatus();
+    if (tab.dataset.tab === 'alertas') {
+      state.paginaAlertas = 1;
+      carregarHistoricoAlertas();
+    }
   });
 });
 
@@ -561,6 +566,55 @@ async function carregarStatus() {
   }
 }
 
+// ── Histórico de alertas (UX-03) ─────────────────────────
+async function carregarHistoricoAlertas() {
+  const lista = document.getElementById('lista-alertas');
+  const pag   = document.getElementById('paginacao-alertas');
+  lista.innerHTML = '<p class="loading">Carregando...</p>';
+  try {
+    const resp = await api.alertas.historico(state.paginaAlertas);
+    renderizarListaAlertas(resp.alertas, resp.paginacao);
+  } catch (e) {
+    lista.innerHTML = `<p class="loading" style="color:#fca5a5">Erro: ${e.message}</p>`;
+    pag.innerHTML = '';
+  }
+}
+
+function renderizarListaAlertas(alertas, paginacao) {
+  const lista = document.getElementById('lista-alertas');
+  const pag   = document.getElementById('paginacao-alertas');
+
+  if (!alertas.length) {
+    lista.innerHTML = '<p class="loading">Você ainda não recebeu alertas.</p>';
+    pag.innerHTML = '';
+    return;
+  }
+
+  lista.innerHTML = alertas.map(a => `
+    <div class="card-alerta">
+      <div class="card-top">
+        <span class="card-bairro">${String(a.bairro || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+        <span class="card-data">${formatarData(a.enviado_em)}</span>
+      </div>
+      ${a.summary ? `<div class="card-desc">${String(a.summary).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : ''}
+    </div>
+  `).join('');
+
+  const totalPags = paginacao.paginas;
+  if (totalPags <= 1) { pag.innerHTML = ''; return; }
+
+  pag.innerHTML = Array.from({ length: totalPags }, (_, i) => i + 1)
+    .map(p => `<button class="${p === state.paginaAlertas ? 'active' : ''}" data-p="${p}">${p}</button>`)
+    .join('');
+
+  pag.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.paginaAlertas = parseInt(btn.dataset.p);
+      carregarHistoricoAlertas();
+    });
+  });
+}
+
 // ── Sessão / Auth ────────────────────────────────────────
 async function carregarSessao() {
   try {
@@ -577,6 +631,7 @@ async function carregarSessao() {
       userNome.textContent    = usuario.nome || usuario.email;
       document.getElementById('tab-btn-admin').style.display = 'inline-block';
       document.getElementById('tab-btn-status').style.display = 'inline-block';
+      document.getElementById('tab-btn-alertas').style.display = 'inline-block';
       await carregarCalendario(usuario);
     } else {
       state.usuario = null;
@@ -584,6 +639,7 @@ async function carregarSessao() {
       userInfo.style.display  = 'none';
       document.getElementById('tab-btn-admin').style.display = 'none';
       document.getElementById('tab-btn-status').style.display = 'none';
+      document.getElementById('tab-btn-alertas').style.display = 'none';
       carregarCalendario(null);
     }
   } catch (err) {

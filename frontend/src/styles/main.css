@@ -521,3 +521,43 @@ html, body { height: 100%; font-family: system-ui, sans-serif; background: var(-
   font-size: .75rem;
   color: var(--text-muted);
 }
+
+/* ── Phase 9 UX-03: Alertas tab ──────────────────────────── */
+.lista-alertas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-alerta {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .5rem;
+  margin-bottom: .25rem;
+}
+
+.card-bairro {
+  font-weight: 600;
+  font-size: .875rem;
+  color: var(--text);
+}
+
+.card-data {
+  font-size: .75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.card-desc {
+  font-size: .8rem;
+  color: var(--text-muted);
+}

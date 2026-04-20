@@ -73,6 +73,7 @@
           <button class="tab" data-tab="historico">Histórico</button>
           <button class="tab" data-tab="calendario">Calendário</button>
           <button class="tab" data-tab="status" id="tab-btn-status" style="display:none">Status</button>
+          <button class="tab" data-tab="alertas" id="tab-btn-alertas" style="display:none">Alertas</button>
           <button class="tab" data-tab="admin" id="tab-btn-admin" style="display:none">Admin</button>
         </div>
 
@@ -300,6 +301,15 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- UX-03: Histórico de alertas recebidos — auth-only -->
+        <div class="tab-content" id="tab-alertas">
+          <h2>Histórico de Alertas</h2>
+          <div id="lista-alertas" class="lista-alertas">
+            <p class="loading">Carregando...</p>
+          </div>
+          <div id="paginacao-alertas" class="paginacao"></div>
         </div>
 
         <!-- UX-02: Status do sistema — apenas leitura, auth-only -->
