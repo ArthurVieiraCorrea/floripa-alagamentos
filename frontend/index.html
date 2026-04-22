@@ -207,6 +207,19 @@
           <!-- Resultado final -->
           <div id="admin-resultado" class="admin-resultado" style="display:none"></div>
 
+          <!-- Ferramentas de Teste -->
+          <details class="admin-formato" style="margin-top:24px">
+            <summary>Ferramentas de Teste</summary>
+            <p class="hint">Simule estados do sistema para verificar comportamentos visuais.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+              <div style="display:flex;gap:8px;align-items:center">
+                <button id="btn-test-stale" class="btn-secondary">Simular previsão stale (3h)</button>
+                <button id="btn-test-reset" class="btn-secondary">Resetar previsão para agora</button>
+                <span id="test-forecast-msg" class="hint"></span>
+              </div>
+            </div>
+          </details>
+
         </div>
 
         <!-- Calendário Google -->

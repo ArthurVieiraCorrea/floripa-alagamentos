@@ -1123,6 +1123,31 @@ api.previsao.atual().then(data => {
   }
 }).catch(() => { /* silencioso — não bloquear init */ });
 
+// ── Ferramentas de Teste (Admin) ─────────────────────────────────────────────
+document.getElementById('btn-test-stale').addEventListener('click', async () => {
+  const msg = document.getElementById('test-forecast-msg');
+  msg.textContent = 'Simulando…';
+  try {
+    const r = await fetch('/api/admin/test/stale-forecast', { method: 'POST' });
+    const d = await r.json();
+    msg.textContent = d.msg || 'Feito.';
+    // Atualiza o banner imediatamente
+    const data = await api.previsao.atual().catch(() => null);
+    document.getElementById('banner-stale-forecast').style.display = data?.stale ? 'block' : 'none';
+  } catch { msg.textContent = 'Erro ao simular.'; }
+});
+
+document.getElementById('btn-test-reset').addEventListener('click', async () => {
+  const msg = document.getElementById('test-forecast-msg');
+  msg.textContent = 'Resetando…';
+  try {
+    const r = await fetch('/api/admin/test/reset-forecast', { method: 'POST' });
+    const d = await r.json();
+    msg.textContent = d.msg || 'Feito.';
+    document.getElementById('banner-stale-forecast').style.display = 'none';
+  } catch { msg.textContent = 'Erro ao resetar.'; }
+});
+
 // Registrar service worker para push notifications (D-11)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
