@@ -644,6 +644,9 @@ async function carregarSessao() {
     }
   } catch (err) {
     console.error('Erro ao verificar sessão:', err.message);
+    // Fallback: mostrar botão de login para que o usuário possa tentar autenticar
+    const btnLogin = document.getElementById('btn-login');
+    if (btnLogin) btnLogin.style.display = 'inline-block';
   }
 }
 
