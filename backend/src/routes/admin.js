@@ -10,6 +10,7 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const AdminController = require('../controllers/adminController');
+const { getDb } = require('../config/database');
 
 const router = express.Router();
 
@@ -28,21 +29,15 @@ router.post('/recalcular', requireAuth, AdminController.recalcular);
 // ── Ferramentas de teste (apenas em dev) ────────────────────────────────────
 // POST /api/admin/test/stale-forecast — simula previsão antiga (3h atrás)
 router.post('/test/stale-forecast', requireAuth, (req, res) => {
-  const { getDb } = require('../config/database');
   const db = getDb();
-  db.run(
-    `UPDATE forecasts_meta SET last_fetched_at = datetime('now', '-3 hours') WHERE id = 1`
-  );
+  db.run(`UPDATE forecasts_meta SET last_fetched_at = datetime('now', '-3 hours') WHERE id = 1`);
   res.json({ ok: true, msg: 'last_fetched_at definido para 3h atrás — previsão agora stale' });
 });
 
 // POST /api/admin/test/reset-forecast — reseta timestamp para agora
 router.post('/test/reset-forecast', requireAuth, (req, res) => {
-  const { getDb } = require('../config/database');
   const db = getDb();
-  db.run(
-    `UPDATE forecasts_meta SET last_fetched_at = datetime('now') WHERE id = 1`
-  );
+  db.run(`UPDATE forecasts_meta SET last_fetched_at = datetime('now') WHERE id = 1`);
   res.json({ ok: true, msg: 'last_fetched_at resetado para agora — previsão fresca' });
 });
 
