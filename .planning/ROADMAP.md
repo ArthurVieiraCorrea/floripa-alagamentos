@@ -57,9 +57,19 @@ Plans:
   4. Usuário vê lista dos alertas que recebeu, com bairro, horário e evento do calendar associado
 **Plans**: 3 plans
 Plans:
-- [ ] 09-01-PLAN.md — Aba Status: 3 indicadores de sistema em tempo real (UX-02)
-- [ ] 09-02-PLAN.md — Aba Alertas: backend /historico + lista paginada de alertas recebidos (UX-03)
+- [x] 09-01-PLAN.md — Aba Status: 3 indicadores de sistema em tempo real (UX-02)
+- [x] 09-02-PLAN.md — Aba Alertas: backend /historico + lista paginada de alertas recebidos (UX-03)
 - [ ] 09-03-PLAN.md — Smoke test: verificar RESIL-03 (banner stale) e UX-01 (seletor antecedência)
+
+### Phase 09.1: Integracao Dados Meteorologicos Reais (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 09
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 09.1 to break down)
 
 ### Phase 10: Onboarding Wizard
 **Goal**: Novo usuário que faz login pela primeira vez é guiado por um wizard de 3 passos e sai com calendar conectado e push ativo
