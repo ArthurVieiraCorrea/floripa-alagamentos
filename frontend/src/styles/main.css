@@ -63,9 +63,9 @@ html, body { height: 100%; font-family: system-ui, sans-serif; background: var(-
 }
 
 /* Tabs */
-.tabs { display: flex; border-bottom: 1px solid var(--border); }
+.tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: thin; }
 .tab {
-  flex: 1;
+  flex: 0 0 auto;
   padding: 12px;
   background: none;
   border: none;
