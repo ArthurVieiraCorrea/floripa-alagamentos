@@ -63,13 +63,16 @@ Plans:
 
 ### Phase 09.1: Integracao Dados Meteorologicos Reais (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** O riskEngine usa precipitacao observada real (mm) do Visual Crossing e observacoes qualitativas METAR do REDEMET para calcular precip_48h_mm, mantendo Open-Meteo como fallback quando as API keys estiverem ausentes
+**Requirements**: D-01 a D-16 (capturados em 09.1-CONTEXT.md)
 **Depends on:** Phase 09
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 09.1 to break down)
+- [ ] 09.1-01-PLAN.md — Schema weather_observations + variaveis de ambiente (Wave 1)
+- [ ] 09.1-02-PLAN.md — visualCrossingService.js: fetch + cache precipitacao observada mm (Wave 2)
+- [ ] 09.1-03-PLAN.md — redemetService.js: fetch + cache METAR SBFL qualitativo (Wave 2, paralelo)
+- [ ] 09.1-04-PLAN.md — scheduler.js: integrar os dois novos servicos no ciclo horario (Wave 3)
 
 ### Phase 10: Onboarding Wizard
 **Goal**: Novo usuário que faz login pela primeira vez é guiado por um wizard de 3 passos e sai com calendar conectado e push ativo
@@ -97,6 +100,7 @@ Plans:
 | 7. Dados Históricos Admin | v1.0 | 3/3 | Complete | 2026-04-15 |
 | 8. Backend Resilience | v1.1 | 0/2 | Not started | - |
 | 9. Frontend UX | v1.1 | 0/3 | Not started | - |
+| 9.1. Integracao Dados Meteorologicos Reais | v1.1 | 0/4 | Not started | - |
 | 10. Onboarding Wizard | v1.1 | 0/TBD | Not started | - |
 
 ---
