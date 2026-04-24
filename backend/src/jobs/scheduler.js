@@ -10,6 +10,8 @@ const { fetchAndCacheForecasts } = require('../services/forecastService');
 const { calcularRiscos } = require('../services/riskEngine');
 const { syncAllConnectedUsers } = require('../services/calendarService');
 const { checkAndSendAlerts } = require('../services/alertService');
+const { fetchAndCacheObservations: fetchVisualCrossing } = require('../services/visualCrossingService');
+const { fetchAndCacheObservations: fetchRedemet } = require('../services/redemetService');
 
 let initialized = false;
 
@@ -29,6 +31,8 @@ function initScheduler() {
   cron.schedule('0 * * * *', async () => {
     console.log('[scheduler] Executando fetch horário de previsão');
     await fetchAndCacheForecasts();
+    await fetchVisualCrossing();
+    await fetchRedemet();
   }, {
     timezone: 'America/Sao_Paulo',
   });
@@ -49,7 +53,7 @@ function initScheduler() {
     timezone: 'America/Sao_Paulo',
   });
 
-  console.log('[scheduler] Jobs iniciados. Forecast: 0 * * * * | Risco+Alertas: 5 */4 * * * | Calendar: */30 * * * *');
+  console.log('[scheduler] Jobs iniciados. Forecast+VC+REDEMET: 0 * * * * | Risco+Alertas: 5 */4 * * * | Calendar: */30 * * * *');
 
   // Executar imediatamente na inicialização — encadeado para garantir ordem:
   // forecast primeiro, depois risco (evita calcularRiscos com cache vazio), depois alertas
@@ -58,6 +62,16 @@ function initScheduler() {
       await fetchAndCacheForecasts();
     } catch (err) {
       console.error('[scheduler] Erro na busca inicial de forecast:', err.message);
+    }
+    try {
+      await fetchVisualCrossing();
+    } catch (err) {
+      console.error('[scheduler] Erro no fetch inicial Visual Crossing:', err.message);
+    }
+    try {
+      await fetchRedemet();
+    } catch (err) {
+      console.error('[scheduler] Erro no fetch inicial REDEMET:', err.message);
     }
     try {
       await calcularRiscos();
