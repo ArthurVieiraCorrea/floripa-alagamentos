@@ -171,6 +171,23 @@ function initSchema(db) {
       ON alertas_enviados(usuario_id, enviado_em)
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS weather_observations (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      bairro          TEXT    NOT NULL DEFAULT 'florianopolis',
+      observed_time   TEXT    NOT NULL,
+      precipitacao_mm REAL    NOT NULL DEFAULT 0,
+      fonte           TEXT    NOT NULL,
+      fetched_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(bairro, observed_time, fonte)
+    )
+  `);
+
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_weather_obs_bairro_time
+      ON weather_observations(bairro, observed_time)
+  `);
+
   // Adicionar alert_threshold se não existir (migrações seguras para SQLite)
   try {
     db.run(`ALTER TABLE usuarios ADD COLUMN alert_threshold INTEGER NOT NULL DEFAULT 51`);
