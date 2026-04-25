@@ -69,10 +69,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 09.1-01-PLAN.md — Schema weather_observations + variaveis de ambiente (Wave 1)
-- [ ] 09.1-02-PLAN.md — visualCrossingService.js: fetch + cache precipitacao observada mm (Wave 2)
-- [ ] 09.1-03-PLAN.md — redemetService.js: fetch + cache METAR SBFL qualitativo (Wave 2, paralelo)
-- [ ] 09.1-04-PLAN.md — scheduler.js: integrar os dois novos servicos no ciclo horario (Wave 3)
+- [x] 09.1-01-PLAN.md — Schema weather_observations + variaveis de ambiente (Wave 1)
+- [x] 09.1-02-PLAN.md — visualCrossingService.js: fetch + cache precipitacao observada mm (Wave 2)
+- [x] 09.1-03-PLAN.md — redemetService.js: fetch + cache METAR SBFL qualitativo (Wave 2, paralelo)
+- [x] 09.1-04-PLAN.md — scheduler.js: integrar os dois novos servicos no ciclo horario (Wave 3)
 
 ### Phase 10: Onboarding Wizard
 **Goal**: Novo usuário que faz login pela primeira vez é guiado por um wizard de 3 passos e sai com calendar conectado e push ativo
@@ -100,7 +100,7 @@ Plans:
 | 7. Dados Históricos Admin | v1.0 | 3/3 | Complete | 2026-04-15 |
 | 8. Backend Resilience | v1.1 | 0/2 | Not started | - |
 | 9. Frontend UX | v1.1 | 0/3 | Not started | - |
-| 9.1. Integracao Dados Meteorologicos Reais | v1.1 | 0/4 | Not started | - |
+| 9.1. Integracao Dados Meteorologicos Reais | v1.1 | 4/4 | Complete | 2026-04-24 |
 | 10. Onboarding Wizard | v1.1 | 0/TBD | Not started | - |
 
 ---

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Resiliência & UX
 status: executing
-last_updated: "2026-04-19T14:40:41.661Z"
-last_activity: 2026-04-19 -- Phase 09 execution started
+last_updated: "2026-04-24T00:00:00.000Z"
+last_activity: 2026-04-24 -- Phase 09.1 complete (4/4 plans), Visual Crossing integrado, REDEMET aguardando chave
 progress:
-  total_phases: 3
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 2
-  percent: 40
+  total_phases: 5
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
+  percent: 80
 ---
 
 # State: Floripa Alagamentos
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core Value:** Avisar o usuário antes de ir a um lugar que pode estar alagado — não depois.
-**Current focus:** Phase 09 — frontend-ux
+**Current focus:** Phase 10 — Onboarding Wizard
 
 ---
 
 ## Current Position
 
-Phase: 09 (frontend-ux) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 09
-Last activity: 2026-04-19 -- Phase 09 execution started
+Phase: 10 (Onboarding Wizard) — NEXT
+Plan: 0 of TBD
+Status: Phase 09.1 complete (4/4 plans), Visual Crossing ativo, REDEMET pendente chave
+Last activity: 2026-04-24 -- Phase 09.1 complete
 
-Progress: [███░░░░░░░] 33% (v1.1)
+Progress: [████████░░] 80% (v1.1)
 
 ---
 
@@ -52,6 +52,7 @@ Progress: [███░░░░░░░] 33% (v1.1)
 | UX-01 (alert lead time selector) em Phase 9 | Campo alert_threshold já existe no banco (v1.0 ALERT-04); Phase 9 só precisa fiar o seletor ao PATCH existente |
 
 ### Roadmap Evolution
+
 - Phase 09.1 inserted after Phase 09: Integração Dados Meteorológicos Reais (INSERTED) — substituir Open-Meteo com Open-Meteo past_hours + REDEMET METAR + Visual Crossing
 
 ### Pending Todos
@@ -66,9 +67,9 @@ Nenhum blocker ativo.
 
 ## Session Continuity
 
-**Last session:** 2026-04-19T14:16:48.054Z
-**Next action:** `/gsd-plan-phase 09` — UX improvements (stale forecast banner, alert lead time selector)
+**Last session:** 2026-04-24T00:00:00.000Z
+**Next action:** `/gsd-discuss-phase 10` ou `/gsd-plan-phase 10` — Onboarding Wizard
 
 ---
 
-*Last updated: 2026-04-19 after Phase 08 complete*
+*Last updated: 2026-04-24 — Phase 09.1 complete, Visual Crossing integrado com fix CR-01 aplicado*
