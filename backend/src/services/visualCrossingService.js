@@ -39,16 +39,15 @@ function sleep(ms) {
 function buildUrl() {
   const KEY = process.env.VISUAL_CROSSING_API_KEY;
   const now = new Date();
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  // Converte para data local UTC-3 (Santa Catarina — sem DST desde Decreto 9.242/2019)
-  const toLocalDate = d => {
-    const local = new Date(d.getTime() - 3 * 60 * 60 * 1000);
-    return local.toISOString().substring(0, 10); // YYYY-MM-DD
-  };
+  // Dia-calendário hoje em UTC-3 (Santa Catarina — sem DST desde Decreto 9.242/2019)
+  const date2 = new Date(now.getTime() - 3 * 60 * 60 * 1000)
+    .toISOString().substring(0, 10); // YYYY-MM-DD
 
-  const date1 = toLocalDate(yesterday);
-  const date2 = toLocalDate(now);
+  // Dia-calendário anterior: subtrair 1 dia do calendário, não 24h do wall-clock
+  // (evita janela errada entre 21h–23h59 quando UTC já virou para o dia seguinte)
+  const [y, m, d] = date2.split('-').map(Number);
+  const date1 = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().substring(0, 10);
 
   return [
     'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline',
