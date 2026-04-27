@@ -83,9 +83,11 @@ Plans:
   2. O usuário consegue conectar o Google Calendar diretamente do wizard, no passo 2, sem sair do fluxo
   3. O usuário consegue ativar push notifications no passo 3 e recebe confirmação visual de sucesso
   4. Após completar o wizard, o flag de onboarding é gravado — reloads e sessões futuras não reexibem o wizard
-  5. Usuário que pula o wizard pode completá-lo depois via configurações
-**Plans**: TBD
-**UI hint**: yes
+  5. Pular o wizard é definitivo (onboarding_done = 1 gravado) — wizard não reaparece
+**Plans**: 2 plans
+Plans:
+- [ ] 10-01-PLAN.md — Backend: migration onboarding_done + auth.js + usuarios.js (PATCH /me) + app.js + api.js (UX-04)
+- [ ] 10-02-PLAN.md — Frontend: CSS wizard + abrirWizard() + fecharWizard() + ativarPushNotificacoes() + disparo em carregarSessao() (UX-04)
 
 ## Progress
 
@@ -101,7 +103,7 @@ Plans:
 | 8. Backend Resilience | v1.1 | 0/2 | Not started | - |
 | 9. Frontend UX | v1.1 | 0/3 | Not started | - |
 | 9.1. Integracao Dados Meteorologicos Reais | v1.1 | 4/4 | Complete | 2026-04-24 |
-| 10. Onboarding Wizard | v1.1 | 0/TBD | Not started | - |
+| 10. Onboarding Wizard | v1.1 | 0/2 | Not started | - |
 
 ---
 
