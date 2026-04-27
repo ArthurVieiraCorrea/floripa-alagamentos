@@ -201,6 +201,13 @@ function initSchema(db) {
   } catch (_) {
     // Coluna já existe — ignorar silenciosamente
   }
+
+  // Adicionar onboarding_done se não existir — flag de wizard de onboarding (UX-04)
+  try {
+    db.run(`ALTER TABLE usuarios ADD COLUMN onboarding_done INTEGER NOT NULL DEFAULT 0`);
+  } catch (_) {
+    // Coluna já existe — ignorar silenciosamente
+  }
 }
 
 module.exports = { getDb };

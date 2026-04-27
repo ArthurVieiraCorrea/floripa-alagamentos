@@ -34,6 +34,7 @@ const calendarRouter    = require('./routes/calendar');
 const pushRouter        = require('./routes/push');
 const alertasRouter     = require('./routes/alertas');
 const adminRouter       = require('./routes/admin');
+const usuariosRouter    = require('./routes/usuarios');
 const { initScheduler } = require('./jobs/scheduler');
 
 const webpush = require('web-push');
@@ -75,6 +76,7 @@ app.use('/api/calendar',    calendarRouter);
 app.use('/api/push',        pushRouter);
 app.use('/api/alertas',     alertasRouter);
 app.use('/api/admin',       adminRouter);
+app.use('/api/usuarios',    usuariosRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
