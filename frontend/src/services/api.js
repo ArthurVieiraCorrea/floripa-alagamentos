@@ -70,6 +70,12 @@ export const api = {
     getVapidPublicKey: () => request('/push/vapid-public-key'),
   },
 
+  usuarios: {
+    // Grava onboarding_done = 1. Chamado ao pular ou concluir o wizard (UX-04, D-06, D-07).
+    setOnboardingDone: () =>
+      request('/usuarios/me', { method: 'PATCH', body: JSON.stringify({ onboarding_done: 1 }) }),
+  },
+
   alertas: {
     pendentes: () => request('/alertas/pendentes'),
     marcarVisto: (ids) =>
