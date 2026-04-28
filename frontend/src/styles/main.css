@@ -561,3 +561,118 @@ html, body { height: 100%; font-family: system-ui, sans-serif; background: var(-
   font-size: .8rem;
   color: var(--text-muted);
 }
+
+/* ── Phase 10: Onboarding Wizard ─────────────────────── */
+#wizard-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#wizard-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 480px;
+  width: calc(100vw - 32px);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes wizard-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-6px); }
+  75%       { transform: translateX(6px); }
+}
+#wizard-modal.shaking {
+  animation: wizard-shake 0.2s ease-in-out 2;
+}
+
+.wizard-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.wizard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s, opacity 0.2s;
+}
+.wizard-dot.ativo    { background: var(--accent); }
+.wizard-dot.visitado { background: var(--accent); opacity: 0.4; }
+
+.wizard-progress-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+#wizard-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.wizard-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.wizard-action-area {
+  margin-bottom: 8px;
+}
+
+.wizard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 24px;
+}
+
+#wizard-btn-pular {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 12px 0;
+  transition: color 0.15s;
+}
+#wizard-btn-pular:hover { color: var(--accent); }
+
+#wizard-btn-proximo {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 120px;
+  transition: opacity 0.15s;
+}
+#wizard-btn-proximo:hover    { opacity: 0.85; }
+#wizard-btn-proximo:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  #wizard-modal { padding: 16px; }
+  .wizard-footer { gap: 8px; }
+}
