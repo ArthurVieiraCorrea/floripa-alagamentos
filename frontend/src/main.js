@@ -615,6 +615,266 @@ function renderizarListaAlertas(alertas, paginacao) {
   });
 }
 
+// ── Onboarding Wizard (Phase 10, UX-04) ─────────────────
+
+function fecharWizard() {
+  document.getElementById('wizard-backdrop')?.remove();
+}
+
+// Ativa push notifications. Usada pelo btn-push-optin e pelo wizard (passo 3).
+// feedbackEl: elemento DOM onde exibir mensagens de sucesso/erro (role="status" ou "alert")
+// btnEl: botão de ação do passo (para desabilitar durante loading e remover após sucesso)
+async function ativarPushNotificacoes(feedbackEl, btnEl) {
+  feedbackEl.textContent = '';
+  feedbackEl.className = 'wizard-feedback';
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    feedbackEl.className = 'wizard-feedback form-msg error';
+    feedbackEl.setAttribute('role', 'alert');
+    feedbackEl.textContent = 'Browser não suporta notificações push.';
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    feedbackEl.className = 'wizard-feedback form-msg error';
+    feedbackEl.setAttribute('role', 'alert');
+    feedbackEl.textContent = 'Permissão de notificações bloqueada no browser. Acesse as configurações do navegador para liberar e tente novamente.';
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Ativando...';
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      feedbackEl.className = 'wizard-feedback form-msg error';
+      feedbackEl.setAttribute('role', 'alert');
+      feedbackEl.textContent = 'Permissão de notificações bloqueada no browser. Acesse as configurações do navegador para liberar e tente novamente.';
+      btnEl.disabled = false;
+      btnEl.textContent = 'Ativar notificações';
+      return;
+    }
+
+    if (!swRegistration) {
+      swRegistration = await navigator.serviceWorker.ready;
+    }
+
+    const { publicKey: VAPID_PUBLIC_KEY } = await api.push.getVapidPublicKey();
+    if (!VAPID_PUBLIC_KEY) throw new Error('VAPID_PUBLIC_KEY não configurada no servidor');
+
+    const subscription = await swRegistration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+
+    await api.push.subscribe(subscription.toJSON());
+    feedbackEl.className = 'wizard-feedback form-msg success';
+    feedbackEl.setAttribute('role', 'status');
+    feedbackEl.textContent = 'Notificações ativadas.';
+    btnEl.style.display = 'none'; // some após sucesso (conforme UI-SPEC)
+    atualizarStatusPush('ativo', state.usuario?.alert_threshold || 51, state.usuario?.alert_hours_before ?? 24);
+  } catch (err) {
+    feedbackEl.className = 'wizard-feedback form-msg error';
+    feedbackEl.setAttribute('role', 'alert');
+    feedbackEl.textContent = 'Não foi possível ativar. Você pode tentar novamente na aba Calendário.';
+    btnEl.disabled = false;
+    btnEl.textContent = 'Ativar notificações';
+  }
+}
+
+function abrirWizard() {
+  // Não abrir se já estiver aberto
+  if (document.getElementById('wizard-backdrop')) return;
+
+  const PASSOS = [
+    {
+      titulo: 'Bem-vindo ao Floripa Alagamentos',
+      desc: 'Este app monitora o risco de alagamento em tempo real nos bairros de Florianópolis e avisa você antes de ir a um lugar que pode estar alagado. Nos próximos 2 passos você conecta seu calendário e ativa os alertas.',
+      btnProximo: 'Próximo',
+      temAcao: false,
+    },
+    {
+      titulo: 'Conecte seu Google Calendar',
+      desc: 'O app verifica seus eventos das próximas 72h e calcula o risco de alagamento nos bairros onde eles acontecem. Seu calendário nunca é modificado.',
+      btnProximo: 'Próximo',
+      temAcao: true,
+      btnAcaoTexto: 'Conectar Calendário',
+    },
+    {
+      titulo: 'Ative as notificações push',
+      desc: 'Receba alertas no seu dispositivo quando um evento do seu calendário cair em um bairro com risco elevado — mesmo com o app fechado.',
+      btnProximo: 'Concluir',
+      temAcao: true,
+      btnAcaoTexto: 'Ativar notificações',
+    },
+  ];
+
+  let passoAtual = 0; // índice 0-based
+
+  function renderizarPasso() {
+    const passo = PASSOS[passoAtual];
+    const n = passoAtual + 1; // número 1-based para exibição
+
+    // Atualizar dots
+    const dots = document.querySelectorAll('.wizard-dot');
+    dots.forEach((dot, i) => {
+      dot.className = 'wizard-dot';
+      if (i < passoAtual) dot.classList.add('visitado');
+      else if (i === passoAtual) dot.classList.add('ativo');
+    });
+
+    // Atualizar label de progresso
+    document.querySelector('.wizard-progress-label').textContent = `Passo ${n} de 3`;
+
+    // Atualizar título e descrição
+    document.getElementById('wizard-title').textContent = passo.titulo;
+    document.querySelector('.wizard-desc').textContent = passo.desc;
+
+    // Atualizar botão próximo/concluir
+    document.getElementById('wizard-btn-proximo').textContent = passo.btnProximo;
+
+    // Atualizar área de ação
+    const actionArea = document.querySelector('.wizard-action-area');
+    actionArea.innerHTML = '';
+    const feedbackEl = document.querySelector('.wizard-feedback');
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'wizard-feedback';
+
+    if (passo.temAcao) {
+      const btnAcao = document.createElement('button');
+      btnAcao.className = 'btn-primary';
+      btnAcao.style.cssText = 'margin-bottom: 12px;';
+      btnAcao.textContent = passo.btnAcaoTexto;
+
+      if (passoAtual === 1) {
+        // Passo 2: Conectar Calendar
+        btnAcao.addEventListener('click', async () => {
+          btnAcao.disabled = true;
+          btnAcao.textContent = 'Conectando...';
+          try {
+            await api.conectarCalendario();
+            feedbackEl.className = 'wizard-feedback form-msg success';
+            feedbackEl.setAttribute('role', 'status');
+            feedbackEl.textContent = 'Calendário conectado com sucesso.';
+            btnAcao.style.display = 'none'; // some após sucesso
+            // NÃO chamar carregarSessao() aqui — fecharia o modal
+            if (state.usuario) state.usuario.calendar_connected = 1;
+          } catch (err) {
+            feedbackEl.className = 'wizard-feedback form-msg error';
+            feedbackEl.setAttribute('role', 'alert');
+            if (err.status === 401 || (err.message && err.message.includes('permissão'))) {
+              feedbackEl.textContent = 'Permissão de calendário não foi concedida no login. Saia e entre novamente para autorizar.';
+            } else {
+              feedbackEl.textContent = 'Não foi possível conectar. Você pode tentar novamente na aba Calendário.';
+            }
+            btnAcao.disabled = false;
+            btnAcao.textContent = 'Conectar Calendário';
+          }
+        });
+      } else if (passoAtual === 2) {
+        // Passo 3: Ativar Push
+        btnAcao.addEventListener('click', () => {
+          ativarPushNotificacoes(feedbackEl, btnAcao);
+        });
+      }
+
+      actionArea.appendChild(btnAcao);
+    }
+  }
+
+  // ── Construir HTML do backdrop + modal ────────────────
+  const backdrop = document.createElement('div');
+  backdrop.id = 'wizard-backdrop';
+  backdrop.innerHTML = `
+    <div id="wizard-modal" role="dialog" aria-modal="true" aria-labelledby="wizard-title" tabindex="-1">
+      <div class="wizard-header">
+        <div class="wizard-progress">
+          <div class="wizard-dot ativo"></div>
+          <div class="wizard-dot"></div>
+          <div class="wizard-dot"></div>
+          <span class="wizard-progress-label">Passo 1 de 3</span>
+        </div>
+        <h2 id="wizard-title"></h2>
+      </div>
+      <div class="wizard-body">
+        <p class="wizard-desc"></p>
+        <div class="wizard-action-area"></div>
+        <div class="wizard-feedback" role="status"></div>
+      </div>
+      <div class="wizard-footer">
+        <button id="wizard-btn-pular">Pular configuração</button>
+        <button id="wizard-btn-proximo">Próximo</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  const modal = document.getElementById('wizard-modal');
+  modal.focus();
+
+  // ── Shake ao clicar fora ────────────────────────────
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) {
+      modal.classList.add('shaking');
+      modal.addEventListener('animationend', () => modal.classList.remove('shaking'), { once: true });
+    }
+  });
+
+  // ── Escape não fecha ────────────────────────────────
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      modal.classList.add('shaking');
+      modal.addEventListener('animationend', () => modal.classList.remove('shaking'), { once: true });
+      return;
+    }
+    // Focus trap
+    if (e.key !== 'Tab') return;
+    const focusable = [...modal.querySelectorAll(
+      'button:not([disabled]):not([style*="display: none"]):not([style*="display:none"]), [tabindex]:not([tabindex="-1"])'
+    )].filter(el => el.offsetParent !== null);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  // ── Botão Pular ─────────────────────────────────────
+  document.getElementById('wizard-btn-pular').addEventListener('click', async () => {
+    fecharWizard();
+    try {
+      await api.usuarios.setOnboardingDone();
+    } catch (_) {
+      // Degradação silenciosa: wizard pode reaparecer no próximo login
+    }
+  });
+
+  // ── Botão Próximo / Concluir ─────────────────────────
+  document.getElementById('wizard-btn-proximo').addEventListener('click', async () => {
+    if (passoAtual < PASSOS.length - 1) {
+      passoAtual++;
+      renderizarPasso();
+    } else {
+      // Passo 3: Concluir — gravar flag e fechar
+      fecharWizard();
+      try {
+        await api.usuarios.setOnboardingDone();
+      } catch (_) {
+        // Degradação silenciosa
+      }
+    }
+  });
+
+  // Renderizar o primeiro passo
+  renderizarPasso();
+}
+
 // ── Sessão / Auth ────────────────────────────────────────
 async function carregarSessao() {
   try {
@@ -632,6 +892,10 @@ async function carregarSessao() {
       document.getElementById('tab-btn-admin').style.display = 'inline-block';
       document.getElementById('tab-btn-status').style.display = 'inline-block';
       document.getElementById('tab-btn-alertas').style.display = 'inline-block';
+      // Onboarding wizard: abrir se usuário ainda não completou (UX-04, D-03)
+      if (!usuario.onboarding_done) {
+        abrirWizard();
+      }
       await carregarCalendario(usuario);
     } else {
       state.usuario = null;
