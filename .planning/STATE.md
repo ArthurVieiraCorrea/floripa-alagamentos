@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Resiliência & UX
-status: complete
+milestone: v1.2
+milestone_name: A definir
+status: planning
 last_updated: "2026-04-28T00:00:00.000Z"
-last_activity: 2026-04-28 -- Phase 10 complete (2/2 plans), wizard de onboarding funcional
+last_activity: 2026-04-28 -- v1.1 milestone arquivado, tag v1.1 criada
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # State: Floripa Alagamentos
@@ -21,21 +21,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-17)
+See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core Value:** Avisar o usuário antes de ir a um lugar que pode estar alagado — não depois.
-**Current focus:** v1.1 completo — todas as fases executadas
+**Current focus:** v1.1 arquivado — iniciar planejamento de v1.2
 
 ---
 
 ## Current Position
 
-Phase: 10 (Onboarding Wizard) — COMPLETE
-Plan: 2 of 2
-Status: Milestone v1.1 completo — todas as 5 fases executadas
-Last activity: 2026-04-28 -- Phase 10 complete
+Milestone v1.1 SHIPPED 2026-04-28.
+Archived to .planning/milestones/v1.1-ROADMAP.md e v1.1-REQUIREMENTS.md.
 
-Progress: [██████████] 100% (v1.1)
+Progress: Aguardando `/gsd-new-milestone` para definir v1.2
 
 ---
 
@@ -43,17 +41,7 @@ Progress: [██████████] 100% (v1.1)
 
 ### Key Decisions Made
 
-| Decision | Rationale |
-|----------|-----------|
-| Open-Meteo como fonte primária de precipitação | INMET TLS failure confirmado; Open-Meteo REST+JSON sem API key, SLA superior |
-| stale=true threshold de 120min | 2x o intervalo do cron — tolera falhas transitórias sem alarme falso |
-| Retry backoff em Phase 8, UI stale banner em Phase 9 | Backend resilience desacoplada da apresentação — Phase 8 pode ser verificada independentemente |
-| Onboarding em phase separada (10) | Depende de DB migration + nova rota + módulo frontend — escopo maior que o restante do UX |
-| UX-01 (alert lead time selector) em Phase 9 | Campo alert_threshold já existe no banco (v1.0 ALERT-04); Phase 9 só precisa fiar o seletor ao PATCH existente |
-
-### Roadmap Evolution
-
-- Phase 09.1 inserted after Phase 09: Integração Dados Meteorológicos Reais (INSERTED) — substituir Open-Meteo com Open-Meteo past_hours + REDEMET METAR + Visual Crossing
+Todas as decisões acumuladas foram movidas para PROJECT.md (seção Key Decisions) e RETROSPECTIVE.md.
 
 ### Pending Todos
 
@@ -68,8 +56,8 @@ Nenhum blocker ativo.
 ## Session Continuity
 
 **Last session:** 2026-04-28T00:00:00.000Z
-**Next action:** `/gsd-complete-milestone` — v1.1 completo, arquivar e iniciar v1.2
+**Next action:** `/gsd-new-milestone` — definir escopo e roadmap de v1.2
 
 ---
 
-*Last updated: 2026-04-24 — Phase 09.1 complete, Visual Crossing integrado com fix CR-01 aplicado*
+*Last updated: 2026-04-28 — v1.1 milestone completo e arquivado*

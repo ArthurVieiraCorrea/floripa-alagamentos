@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Fases 1-7 (shipped 2026-04-17)
-- 🚧 **v1.1 Resiliência & UX** — Fases 8-10 (in progress)
+- ✅ **v1.1 Resiliência & UX** — Fases 8-10 (shipped 2026-04-28)
 
 ## Phases
 
@@ -22,72 +22,21 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 </details>
 
-### 🚧 v1.1 Resiliência & UX (In Progress)
+<details>
+<summary>✅ v1.1 Resiliência & UX (Fases 8-10) — SHIPPED 2026-04-28</summary>
 
-**Milestone Goal:** Tornar o sistema robusto a falhas de rede e guiar novos usuários do zero ao primeiro alerta funcional.
+- [x] Phase 8: Backend Resilience (2/2 plans) — Backoff exponencial Open-Meteo, auto-trigger recálculo pós-CSV — completed 2026-04-19
+- [x] Phase 9: Frontend UX (3/3 plans) — Painel status, histórico alertas, banner stale, seletor antecedência — completed 2026-04-22
+- [x] Phase 09.1: Integração Dados Meteorológicos Reais (4/4 plans, INSERTED) — Visual Crossing + REDEMET METAR + fallback Open-Meteo — completed 2026-04-24
+- [x] Phase 10: Onboarding Wizard (2/2 plans) — Wizard 3 passos login→calendar→push com flag persistente — completed 2026-04-28
 
-- [ ] **Phase 8: Backend Resilience** - Retry backoff no fetch Open-Meteo e endpoint de recálculo manual pós-CSV
-- [ ] **Phase 9: Frontend UX** - Banner de dados stale, seletor de antecedência, painel de status do sistema e histórico de alertas
-- [x] **Phase 10: Onboarding Wizard** - Wizard de 3 passos guiando novos usuários até push ativo
+See `.planning/milestones/v1.1-ROADMAP.md` for full details.
 
-## Phase Details
+</details>
 
-### Phase 8: Backend Resilience
-**Goal**: O backend tolera falhas transitórias do Open-Meteo sem perder dados e permite ao admin sincronizar riscos imediatamente após importação CSV
-**Depends on**: Phase 7 (v1.0 complete)
-**Requirements**: RESIL-01, RESIL-02
-**Success Criteria** (what must be TRUE):
-  1. Após uma falha de rede no fetch Open-Meteo, o sistema retenta automaticamente com backoff exponencial sem intervenção manual
-  2. O forecast em cache permanece servido durante as retentativas — o sistema não retorna erro 500 para o frontend enquanto estiver retentando
-  3. Admin clica em confirmar importação CSV e o motor de risco recalcula imediatamente, sem aguardar o ciclo de 4h
-  4. A rota de recálculo manual é protegida — apenas admins autenticados podem acioná-la
-**Plans**: 2 plans
-Plans:
-- [x] 08-01-PLAN.md — Backoff exponencial em fetchWithRetry() (RESIL-02)
-- [x] 08-02-PLAN.md — Auto-trigger recálculo em confirmar() + checkAndSendAlerts em recalcular() + frontend cleanup (RESIL-01)
+### 📋 v1.2 (Planned)
 
-### Phase 9: Frontend UX
-**Goal**: O usuário vê em tempo real se os dados são confiáveis, controla quando quer ser alertado e consulta o histórico de alertas que recebeu
-**Depends on**: Phase 8
-**Requirements**: RESIL-03, UX-01, UX-02, UX-03
-**Success Criteria** (what must be TRUE):
-  1. Quando o forecast está desatualizado (>120 min), um banner visível avisa o usuário que os dados podem estar stale
-  2. Usuário autenticado pode mover um seletor de 1h a 48h e o novo valor de antecedência é salvo e aplicado nos alertas seguintes
-  3. Usuário vê painel de status com o estado atual de: frescor do forecast, sincronização do calendar e push ativo/inativo
-  4. Usuário vê lista dos alertas que recebeu, com bairro, horário e evento do calendar associado
-**Plans**: 3 plans
-Plans:
-- [x] 09-01-PLAN.md — Aba Status: 3 indicadores de sistema em tempo real (UX-02)
-- [x] 09-02-PLAN.md — Aba Alertas: backend /historico + lista paginada de alertas recebidos (UX-03)
-- [ ] 09-03-PLAN.md — Smoke test: verificar RESIL-03 (banner stale) e UX-01 (seletor antecedência)
-
-### Phase 09.1: Integracao Dados Meteorologicos Reais (INSERTED)
-
-**Goal:** O riskEngine usa precipitacao observada real (mm) do Visual Crossing e observacoes qualitativas METAR do REDEMET para calcular precip_48h_mm, mantendo Open-Meteo como fallback quando as API keys estiverem ausentes
-**Requirements**: D-01 a D-16 (capturados em 09.1-CONTEXT.md)
-**Depends on:** Phase 09
-**Plans:** 4 plans
-
-Plans:
-- [x] 09.1-01-PLAN.md — Schema weather_observations + variaveis de ambiente (Wave 1)
-- [x] 09.1-02-PLAN.md — visualCrossingService.js: fetch + cache precipitacao observada mm (Wave 2)
-- [x] 09.1-03-PLAN.md — redemetService.js: fetch + cache METAR SBFL qualitativo (Wave 2, paralelo)
-- [x] 09.1-04-PLAN.md — scheduler.js: integrar os dois novos servicos no ciclo horario (Wave 3)
-
-### Phase 10: Onboarding Wizard
-**Goal**: Novo usuário que faz login pela primeira vez é guiado por um wizard de 3 passos e sai com calendar conectado e push ativo
-**Depends on**: Phase 9
-**Requirements**: UX-04
-**Success Criteria** (what must be TRUE):
-  1. Na primeira vez que um novo usuário faz login, o wizard abre automaticamente — sem necessidade de encontrar configurações
-  2. O usuário consegue conectar o Google Calendar diretamente do wizard, no passo 2, sem sair do fluxo
-  3. O usuário consegue ativar push notifications no passo 3 e recebe confirmação visual de sucesso
-  4. Após completar o wizard, o flag de onboarding é gravado — reloads e sessões futuras não reexibem o wizard
-  5. Pular o wizard é definitivo (onboarding_done = 1 gravado) — wizard não reaparece
-**Plans**: 2 plans
-Plans:
-- [x] 10-01-PLAN.md — Backend: migration onboarding_done + auth.js + usuarios.js (PATCH /me) + app.js + api.js (UX-04)
-- [x] 10-02-PLAN.md — Frontend: CSS wizard + abrirWizard() + fecharWizard() + ativarPushNotificacoes() + disparo em carregarSessao() (UX-04)
+*Next milestone to be defined via `/gsd-new-milestone`*
 
 ## Progress
 
@@ -100,12 +49,12 @@ Plans:
 | 5. Integração Google Calendar | v1.0 | 3/3 | Complete | 2026-04-13 |
 | 6. Alertas e Notificações Push | v1.0 | 3/3 | Complete | 2026-04-14 |
 | 7. Dados Históricos Admin | v1.0 | 3/3 | Complete | 2026-04-15 |
-| 8. Backend Resilience | v1.1 | 0/2 | Not started | - |
-| 9. Frontend UX | v1.1 | 0/3 | Not started | - |
-| 9.1. Integracao Dados Meteorologicos Reais | v1.1 | 4/4 | Complete | 2026-04-24 |
+| 8. Backend Resilience | v1.1 | 2/2 | Complete | 2026-04-19 |
+| 9. Frontend UX | v1.1 | 3/3 | Complete | 2026-04-22 |
+| 9.1. Integração Dados Meteorológicos Reais | v1.1 | 4/4 | Complete | 2026-04-24 |
 | 10. Onboarding Wizard | v1.1 | 2/2 | Complete | 2026-04-28 |
 
 ---
 
 *v1.0 shipped: 2026-04-17*
-*v1.1 roadmap created: 2026-04-17*
+*v1.1 shipped: 2026-04-28*
