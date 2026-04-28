@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Resiliência & UX
-status: executing
-last_updated: "2026-04-24T00:00:00.000Z"
-last_activity: 2026-04-24 -- Phase 09.1 complete (4/4 plans), Visual Crossing integrado, REDEMET aguardando chave
+status: complete
+last_updated: "2026-04-28T00:00:00.000Z"
+last_activity: 2026-04-28 -- Phase 10 complete (2/2 plans), wizard de onboarding funcional
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
-  percent: 80
+  completed_phases: 5
+  total_plans: 11
+  completed_plans: 11
+  percent: 100
 ---
 
 # State: Floripa Alagamentos
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core Value:** Avisar o usuário antes de ir a um lugar que pode estar alagado — não depois.
-**Current focus:** Phase 10 — Onboarding Wizard
+**Current focus:** v1.1 completo — todas as fases executadas
 
 ---
 
 ## Current Position
 
-Phase: 10 (Onboarding Wizard) — NEXT
-Plan: 0 of TBD
-Status: Phase 09.1 complete (4/4 plans), Visual Crossing ativo, REDEMET pendente chave
-Last activity: 2026-04-24 -- Phase 09.1 complete
+Phase: 10 (Onboarding Wizard) — COMPLETE
+Plan: 2 of 2
+Status: Milestone v1.1 completo — todas as 5 fases executadas
+Last activity: 2026-04-28 -- Phase 10 complete
 
-Progress: [████████░░] 80% (v1.1)
+Progress: [██████████] 100% (v1.1)
 
 ---
 
@@ -67,8 +67,8 @@ Nenhum blocker ativo.
 
 ## Session Continuity
 
-**Last session:** 2026-04-24T00:00:00.000Z
-**Next action:** `/gsd-discuss-phase 10` ou `/gsd-plan-phase 10` — Onboarding Wizard
+**Last session:** 2026-04-28T00:00:00.000Z
+**Next action:** `/gsd-complete-milestone` — v1.1 completo, arquivar e iniciar v1.2
 
 ---
 

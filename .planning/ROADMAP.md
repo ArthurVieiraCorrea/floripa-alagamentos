@@ -28,7 +28,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 - [ ] **Phase 8: Backend Resilience** - Retry backoff no fetch Open-Meteo e endpoint de recálculo manual pós-CSV
 - [ ] **Phase 9: Frontend UX** - Banner de dados stale, seletor de antecedência, painel de status do sistema e histórico de alertas
-- [ ] **Phase 10: Onboarding Wizard** - Wizard de 3 passos guiando novos usuários até push ativo
+- [x] **Phase 10: Onboarding Wizard** - Wizard de 3 passos guiando novos usuários até push ativo
 
 ## Phase Details
 
@@ -86,8 +86,8 @@ Plans:
   5. Pular o wizard é definitivo (onboarding_done = 1 gravado) — wizard não reaparece
 **Plans**: 2 plans
 Plans:
-- [ ] 10-01-PLAN.md — Backend: migration onboarding_done + auth.js + usuarios.js (PATCH /me) + app.js + api.js (UX-04)
-- [ ] 10-02-PLAN.md — Frontend: CSS wizard + abrirWizard() + fecharWizard() + ativarPushNotificacoes() + disparo em carregarSessao() (UX-04)
+- [x] 10-01-PLAN.md — Backend: migration onboarding_done + auth.js + usuarios.js (PATCH /me) + app.js + api.js (UX-04)
+- [x] 10-02-PLAN.md — Frontend: CSS wizard + abrirWizard() + fecharWizard() + ativarPushNotificacoes() + disparo em carregarSessao() (UX-04)
 
 ## Progress
 
@@ -103,7 +103,7 @@ Plans:
 | 8. Backend Resilience | v1.1 | 0/2 | Not started | - |
 | 9. Frontend UX | v1.1 | 0/3 | Not started | - |
 | 9.1. Integracao Dados Meteorologicos Reais | v1.1 | 4/4 | Complete | 2026-04-24 |
-| 10. Onboarding Wizard | v1.1 | 0/2 | Not started | - |
+| 10. Onboarding Wizard | v1.1 | 2/2 | Complete | 2026-04-28 |
 
 ---
 
