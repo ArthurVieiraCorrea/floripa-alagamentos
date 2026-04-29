@@ -71,6 +71,7 @@ export const api = {
     setAlertHours: (hours_before) =>
       request('/push/alert-hours', { method: 'PATCH', body: JSON.stringify({ hours_before }) }),
     getVapidPublicKey: () => request('/push/vapid-public-key'),
+    sendTest: () => request('/push/test', { method: 'POST' }),
   },
 
   usuarios: {

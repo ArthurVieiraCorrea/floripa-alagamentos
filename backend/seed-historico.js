@@ -1,6 +1,7 @@
 'use strict';
-// Seed script: insere ~85 ocorrências históricas realistas em Florianópolis (2021-2024)
-// Uso: node backend/seed-historico.js
+// Seed script: insere ocorrências de demonstração em Florianópolis (2021-2024)
+// Cobre toda a ilha: norte, sul, leste e região continental.
+// Uso: node seed-historico.js  (executar dentro da pasta backend/)
 // Inserção direta no SQLite — não requer autenticação.
 
 const path = require('path');
@@ -108,6 +109,71 @@ const DADOS = [
   { bairro:'Santa Mônica', lat:-27.5910, lng:-48.4932, nivel:'baixo',   data:'2022-12-12 14:00:00', desc:'Acúmulo leve' },
   { bairro:'Santa Mônica', lat:-27.5924, lng:-48.4918, nivel:'medio',   data:'2023-12-28 10:30:00', desc:'Rua secundária bloqueada' },
   { bairro:'Santa Mônica', lat:-27.5898, lng:-48.4946, nivel:'baixo',   data:'2024-03-15 15:00:00', desc:'Evento passageiro' },
+
+  // ── Campeche (S2iD — área de drenagem crítica no sul da ilha)
+  { bairro:'Campeche', lat:-27.6720, lng:-48.4715, nivel:'critico', data:'2021-01-15 14:00:00', desc:'Rio Campeche transbordou — ruas do bairro inundadas' },
+  { bairro:'Campeche', lat:-27.6738, lng:-48.4698, nivel:'alto',    data:'2021-03-08 11:30:00', desc:'Alagamento na Av. Campeche' },
+  { bairro:'Campeche', lat:-27.6705, lng:-48.4732, nivel:'alto',    data:'2022-02-03 16:00:00', desc:'Chuva de 90mm em 5h — vias bloqueadas' },
+  { bairro:'Campeche', lat:-27.6751, lng:-48.4685, nivel:'critico', data:'2022-11-19 09:45:00', desc:'Maior evento registrado no bairro' },
+  { bairro:'Campeche', lat:-27.6718, lng:-48.4720, nivel:'alto',    data:'2023-01-22 18:00:00', desc:'Transbordamento em área residencial' },
+  { bairro:'Campeche', lat:-27.6732, lng:-48.4705, nivel:'medio',   data:'2023-12-10 13:30:00', desc:'Acúmulo moderado nas ruas baixas' },
+  { bairro:'Campeche', lat:-27.6698, lng:-48.4748, nivel:'alto',    data:'2024-02-20 15:15:00', desc:'Drenagem insuficiente — rua principal alagada' },
+
+  // ── Rio Tavares (S2iD — planície de inundação entre Campeche e Lagoa)
+  { bairro:'Rio Tavares', lat:-27.6520, lng:-48.4680, nivel:'alto',    data:'2021-02-10 17:00:00', desc:'Rio Tavares extravasou margens' },
+  { bairro:'Rio Tavares', lat:-27.6538, lng:-48.4663, nivel:'critico', data:'2022-01-28 12:30:00', desc:'Inundação em área de várzea — isolamento de residências' },
+  { bairro:'Rio Tavares', lat:-27.6505, lng:-48.4698, nivel:'alto',    data:'2022-12-01 10:00:00', desc:'Chuva intensa — SC-405 parcialmente alagada' },
+  { bairro:'Rio Tavares', lat:-27.6549, lng:-48.4671, nivel:'medio',   data:'2023-02-14 14:45:00', desc:'Evento moderado após frente fria' },
+  { bairro:'Rio Tavares', lat:-27.6514, lng:-48.4688, nivel:'alto',    data:'2024-01-31 08:30:00', desc:'Transbordamento recorrente no ponto baixo' },
+
+  // ── Tapera (área costeira de baixa altitude)
+  { bairro:'Tapera', lat:-27.6380, lng:-48.5085, nivel:'medio',   data:'2021-11-14 15:00:00', desc:'Acúmulo de água em ruas próximas ao mar' },
+  { bairro:'Tapera', lat:-27.6395, lng:-48.5071, nivel:'alto',    data:'2022-02-22 11:00:00', desc:'Maré alta + chuva — ruas alagadas' },
+  { bairro:'Tapera', lat:-27.6368, lng:-48.5099, nivel:'medio',   data:'2023-01-05 16:30:00', desc:'Nível moderado na área central' },
+  { bairro:'Tapera', lat:-27.6402, lng:-48.5060, nivel:'alto',    data:'2024-02-12 13:00:00', desc:'Enchente em residências de baixo nível' },
+
+  // ── Armação / Pântano do Sul (S2iD — extremo sul da ilha)
+  { bairro:'Armação', lat:-27.7685, lng:-48.5080, nivel:'medio',   data:'2021-02-20 10:00:00', desc:'Alagamento na via de acesso à praia' },
+  { bairro:'Armação', lat:-27.7700, lng:-48.5065, nivel:'alto',    data:'2022-03-05 14:30:00', desc:'Acumulado de 80mm em 3h' },
+  { bairro:'Armação', lat:-27.7670, lng:-48.5095, nivel:'medio',   data:'2023-11-30 17:00:00', desc:'Vias de saída comprometidas' },
+  { bairro:'Pântano do Sul', lat:-27.7901, lng:-48.5102, nivel:'medio',   data:'2021-12-18 12:00:00', desc:'Acúmulo em área de baixada' },
+  { bairro:'Pântano do Sul', lat:-27.7918, lng:-48.5088, nivel:'alto',    data:'2023-02-28 09:30:00', desc:'Via principal alagada após tempestade' },
+
+  // ── Ribeirão da Ilha (planície costeira no sul)
+  { bairro:'Ribeirão da Ilha', lat:-27.7480, lng:-48.5470, nivel:'medio',   data:'2022-01-20 15:00:00', desc:'Alagamento na Rodovia Baldicero Filomeno' },
+  { bairro:'Ribeirão da Ilha', lat:-27.7498, lng:-48.5455, nivel:'alto',    data:'2023-03-02 11:30:00', desc:'Transbordamento do córrego central' },
+  { bairro:'Ribeirão da Ilha', lat:-27.7462, lng:-48.5485, nivel:'medio',   data:'2024-01-16 14:00:00', desc:'Evento moderado — comunidade isolada por 2h' },
+
+  // ── Ingleses (S2iD — norte da ilha, bacia do Rio Ingleses)
+  { bairro:'Ingleses', lat:-27.4325, lng:-48.3952, nivel:'alto',    data:'2021-01-18 16:00:00', desc:'Rio Ingleses transbordou — Rua Dom João Becker alagada' },
+  { bairro:'Ingleses', lat:-27.4340, lng:-48.3938, nivel:'critico', data:'2022-02-14 12:45:00', desc:'Maior evento histórico no norte da ilha — 110mm' },
+  { bairro:'Ingleses', lat:-27.4310, lng:-48.3968, nivel:'alto',    data:'2022-12-22 17:30:00', desc:'Alagamento em área residencial extensa' },
+  { bairro:'Ingleses', lat:-27.4352, lng:-48.3921, nivel:'medio',   data:'2023-02-05 10:00:00', desc:'Transbordamento pontual' },
+  { bairro:'Ingleses', lat:-27.4328, lng:-48.3945, nivel:'alto',    data:'2024-03-01 14:30:00', desc:'Chuva de 75mm em 4h — vias intransitáveis' },
+
+  // ── Canasvieiras (baixada costeira no norte)
+  { bairro:'Canasvieiras', lat:-27.4231, lng:-48.4678, nivel:'medio',   data:'2021-03-01 13:00:00', desc:'Acúmulo de água na avenida principal' },
+  { bairro:'Canasvieiras', lat:-27.4245, lng:-48.4662, nivel:'alto',    data:'2022-01-10 18:00:00', desc:'Maré alta combinada com chuva intensa' },
+  { bairro:'Canasvieiras', lat:-27.4218, lng:-48.4695, nivel:'medio',   data:'2023-01-28 11:15:00', desc:'Ruas residenciais alagadas por 3h' },
+  { bairro:'Canasvieiras', lat:-27.4252, lng:-48.4680, nivel:'alto',    data:'2024-02-08 15:45:00', desc:'Evento recorrente na baixada' },
+
+  // ── Cachoeira do Bom Jesus (calha do rio no norte da ilha)
+  { bairro:'Cachoeira do Bom Jesus', lat:-27.4310, lng:-48.4381, nivel:'alto',    data:'2021-02-07 14:00:00', desc:'Cachoeira do Bom Jesus transbordou' },
+  { bairro:'Cachoeira do Bom Jesus', lat:-27.4325, lng:-48.4365, nivel:'critico', data:'2022-11-25 10:30:00', desc:'Maior evento registrado — rio atingiu nível máximo' },
+  { bairro:'Cachoeira do Bom Jesus', lat:-27.4298, lng:-48.4398, nivel:'alto',    data:'2023-12-15 17:00:00', desc:'Ponte local interditada por precaução' },
+  { bairro:'Cachoeira do Bom Jesus', lat:-27.4338, lng:-48.4350, nivel:'medio',   data:'2024-01-08 09:00:00', desc:'Transbordamento moderado após 60mm' },
+
+  // ── Barra da Lagoa (S2iD — canal de ligação com o mar)
+  { bairro:'Barra da Lagoa', lat:-27.5700, lng:-48.4282, nivel:'alto',    data:'2021-01-25 15:30:00', desc:'Canal da Barra transbordou — acesso bloqueado' },
+  { bairro:'Barra da Lagoa', lat:-27.5715, lng:-48.4265, nivel:'critico', data:'2022-02-18 11:00:00', desc:'Combinação de ressaca e chuva — comunidade ilhada' },
+  { bairro:'Barra da Lagoa', lat:-27.5688, lng:-48.4300, nivel:'alto',    data:'2023-03-08 16:00:00', desc:'Nível do canal 1,5m acima do normal' },
+  { bairro:'Barra da Lagoa', lat:-27.5722, lng:-48.4273, nivel:'medio',   data:'2024-02-03 13:00:00', desc:'Alagamento moderado na via principal' },
+
+  // ── Lagoa da Conceição (área de várzea em torno da lagoa)
+  { bairro:'Lagoa da Conceição', lat:-27.6002, lng:-48.4548, nivel:'medio',   data:'2021-12-20 10:00:00', desc:'Nível da lagoa elevado — ruas marginais alagadas' },
+  { bairro:'Lagoa da Conceição', lat:-27.6018, lng:-48.4531, nivel:'alto',    data:'2022-11-08 14:30:00', desc:'Transbordamento após 72h de chuva contínua' },
+  { bairro:'Lagoa da Conceição', lat:-27.5985, lng:-48.4565, nivel:'medio',   data:'2023-01-30 09:00:00', desc:'Área baixa junto à lagoa comprometida' },
+  { bairro:'Lagoa da Conceição', lat:-27.6025, lng:-48.4518, nivel:'alto',    data:'2024-02-25 16:30:00', desc:'SC-406 parcialmente alagada' },
 ];
 
 const stmt = db.prepare(

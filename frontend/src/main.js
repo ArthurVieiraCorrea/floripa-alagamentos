@@ -989,13 +989,15 @@ async function carregarSessao() {
 function atualizarStatusPush(status, threshold, hoursBeforeArg) {
   const icon  = document.getElementById('push-status-icon');
   const texto = document.getElementById('push-status-texto');
-  const btnOn  = document.getElementById('btn-push-optin');
-  const btnOff = document.getElementById('btn-push-optout');
+  const btnOn   = document.getElementById('btn-push-optin');
+  const btnOff  = document.getElementById('btn-push-optout');
+  const btnTest = document.getElementById('btn-push-test');
   const thRow  = document.getElementById('push-threshold-row');
   const hoursRow = document.getElementById('push-hours-row');
 
   btnOn.style.display    = 'none';
   btnOff.style.display   = 'none';
+  btnTest.style.display  = 'none';
   thRow.style.display    = 'none';
   hoursRow.style.display = 'none';
 
@@ -1003,6 +1005,7 @@ function atualizarStatusPush(status, threshold, hoursBeforeArg) {
     icon.style.color  = '#22c55e';
     texto.textContent = 'Notificações push ativas';
     btnOff.style.display   = 'inline-block';
+    btnTest.style.display  = 'inline-block';
     thRow.style.display    = 'flex';
     hoursRow.style.display = 'flex';
     if (threshold !== undefined) {
@@ -1210,6 +1213,27 @@ document.getElementById('btn-push-optout').addEventListener('click', async () =>
   } catch (err) {
     console.error('[push] Erro ao desativar:', err.message);
     btn.disabled = false;
+  }
+});
+
+// Testar notificação push
+document.getElementById('btn-push-test').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-push-test');
+  const msg = document.getElementById('push-msg');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  try {
+    await api.push.sendTest();
+    msg.className = 'form-msg success';
+    msg.textContent = 'Notificação enviada! Verifique o browser.';
+    setTimeout(() => { msg.textContent = ''; msg.className = 'form-msg'; }, 4000);
+  } catch (err) {
+    msg.className = 'form-msg error';
+    msg.textContent = err.message || 'Erro ao enviar notificação de teste.';
+    setTimeout(() => { msg.textContent = ''; msg.className = 'form-msg'; }, 4000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Testar notificação';
   }
 });
 

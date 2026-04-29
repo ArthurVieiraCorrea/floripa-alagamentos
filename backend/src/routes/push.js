@@ -101,4 +101,32 @@ router.patch('/alert-hours', requireAuth, (req, res) => {
   }
 });
 
+// POST /api/push/test — dispara notificação de teste imediata para o usuário autenticado
+router.post('/test', requireAuth, async (req, res) => {
+  const db = getDb();
+  const row = db.selectOne(
+    'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE usuario_id = ? LIMIT 1',
+    [req.session.userId]
+  );
+  if (!row) {
+    return res.status(404).json({ erro: 'Nenhuma subscription encontrada. Ative as notificações primeiro.' });
+  }
+  const webpush = require('web-push');
+  try {
+    await webpush.sendNotification(
+      { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
+      JSON.stringify({
+        title: 'Floripa Alagamentos — Teste',
+        body: 'Notificações push funcionando corretamente!',
+        tag: 'teste',
+        url: '/',
+      })
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[push/test] Erro:', err.message);
+    res.status(500).json({ erro: 'Falha ao enviar notificação de teste.' });
+  }
+});
+
 module.exports = router;
