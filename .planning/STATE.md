@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: A definir
+milestone_name: Investor Ready
 status: planning
 last_updated: "2026-04-28T00:00:00.000Z"
-last_activity: 2026-04-28 -- v1.1 milestone arquivado, tag v1.1 criada
+last_activity: 2026-04-28 -- Milestone v1.2 Investor Ready iniciado
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,10 +30,10 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 
 ## Current Position
 
-Milestone v1.1 SHIPPED 2026-04-28.
-Archived to .planning/milestones/v1.1-ROADMAP.md e v1.1-REQUIREMENTS.md.
-
-Progress: Aguardando `/gsd-new-milestone` para definir v1.2
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-28 — Milestone v1.2 Investor Ready iniciado
 
 ---
 

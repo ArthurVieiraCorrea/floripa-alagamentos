@@ -37,9 +37,17 @@ Avisar o usuário antes de ir a um lugar que pode estar alagado — não depois.
 - ✓ Onboarding wizard de 3 passos (login → calendar → push) — v1.1 (UX-04)
 - ✓ Precipitação observada real (Visual Crossing mm + REDEMET METAR) no motor de risco — v1.1 (D-01..16)
 
+## Current Milestone: v1.2 Investor Ready
+
+**Goal:** Tornar o produto apresentável para investidores brasileiros — landing page com pitch claro e UI refinada do app.
+
+**Target features:**
+- Landing page PT-BR: hero + proposta de valor, como funciona (4 passos), roadmap/visão de produto, CTA para testar o app
+- UI polish do app: tipografia, paleta de cores e hierarquia visual consistentes, responsividade mobile
+
 ### Active
 
-*(Nenhum requirement ativo — aguardando definição de v1.2)*
+*(Requirements de v1.2 sendo definidos)*
 
 ### Out of Scope
 
@@ -104,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 after v1.1 milestone*
+*Last updated: 2026-04-28 — milestone v1.2 iniciado*
