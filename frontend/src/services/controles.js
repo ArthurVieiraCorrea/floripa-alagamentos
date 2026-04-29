@@ -55,6 +55,33 @@ export function criarControleToggle({ onModoChange }) {
 }
 
 /**
+ * Cria o controle de toggle do heatmap histórico.
+ * @param {{ onToggle: (ativo: boolean) => void, inicialmenteAtivo?: boolean }} opts
+ * @returns {L.Control}
+ */
+export function criarControleHeatmap({ onToggle, inicialmenteAtivo = true }) {
+  const ControleHeatmap = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd() {
+      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control controle-toggle');
+      L.DomEvent.disableClickPropagation(container);
+      this._btn = L.DomUtil.create('button', 'btn-modo' + (inicialmenteAtivo ? ' ativo' : ''), container);
+      this._btn.textContent = '🔥 Histórico';
+      this._btn.type = 'button';
+      this._ativo = inicialmenteAtivo;
+      L.DomEvent.on(this._btn, 'click', () => {
+        this._ativo = !this._ativo;
+        this._btn.classList.toggle('ativo', this._ativo);
+        onToggle(this._ativo);
+      });
+      return container;
+    },
+    onRemove() { if (this._btn) L.DomEvent.off(this._btn); }
+  });
+  return new ControleHeatmap();
+}
+
+/**
  * Cria o controle de seleção de horizonte temporal (24h / 48h / 72h).
  * Posição: topleft, abaixo do toggle Risco/Ocorrências.
  * Inclui linha de timestamp abaixo dos botões (D-08).

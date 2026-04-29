@@ -27,6 +27,7 @@ const criarLimiter = rateLimit({
 
 router.get('/recentes',  ctrl.recentes);
 router.get('/stats',     ctrl.estatisticas);
+router.get('/heatmap',   ctrl.heatmap);
 router.get('/',          ctrl.listar);
 router.post('/',         criarLimiter, ctrl.criar);     // rate-limited, still public
 router.get('/:id',       ctrl.buscarPorId);

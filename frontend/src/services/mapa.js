@@ -180,3 +180,40 @@ export function removerCamadaRisco(map, camadaRef) {
     camadaRef.layer = null;
   }
 }
+
+// ── Heatmap Histórico ────────────────────────────────────
+
+/**
+ * Renderiza heatmap de incidentes históricos usando Leaflet.heat.
+ * @param {L.Map} map
+ * @param {Array<{lat, lng, weight}>} pontos
+ * @param {{ layer: any|null }} heatRef
+ */
+export function renderizarHeatmap(map, pontos, heatRef) {
+  if (heatRef.layer) {
+    map.removeLayer(heatRef.layer);
+    heatRef.layer = null;
+  }
+  if (!pontos.length) return;
+
+  const dados = pontos.map(p => [p.lat, p.lng, p.weight]);
+  heatRef.layer = L.heatLayer(dados, {
+    radius: 28,
+    blur: 20,
+    maxZoom: 14,
+    max: 1.0,
+    gradient: { 0.3: '#ffe066', 0.6: '#ff8c00', 0.85: '#e63c00', 1.0: '#7c0000' }
+  }).addTo(map);
+}
+
+/**
+ * Remove o heatmap do mapa.
+ * @param {L.Map} map
+ * @param {{ layer: any|null }} heatRef
+ */
+export function removerHeatmap(map, heatRef) {
+  if (heatRef.layer) {
+    map.removeLayer(heatRef.layer);
+    heatRef.layer = null;
+  }
+}

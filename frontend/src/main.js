@@ -1,6 +1,6 @@
 import { api } from './services/api.js';
-import { iniciarMapa, renderizarMarcadores, renderizarCamadaRisco, removerCamadaRisco } from './services/mapa.js';
-import { criarControleToggle, criarControleSeletor } from './services/controles.js';
+import { iniciarMapa, renderizarMarcadores, renderizarCamadaRisco, removerCamadaRisco, renderizarHeatmap, removerHeatmap } from './services/mapa.js';
+import { criarControleToggle, criarControleSeletor, criarControleHeatmap } from './services/controles.js';
 
 // Lista canônica de bairros — espelho de backend/src/constants/bairros.js
 // Usada no <select> de associação manual de bairro (CAL-04)
@@ -37,6 +37,7 @@ const state = {
   filtros: { nivel: '', bairro: '' },
   // Phase 04 additions
   camadaRisco: { layer: null },   // referência mutável para removeLayer sem acúmulo
+  heatmap: { layer: null },       // heatmap de incidentes históricos
   modoAtivo: 'risco',             // 'risco' | 'ocorrencias' — D-03 default: risco
   horizonteAtivo: 24,             // 24 | 48 | 72 — D-05 default: 24h
   geojsonBairros: null,           // cache do fetch de bairros.geojson — fetch uma única vez
@@ -81,8 +82,72 @@ const seletor = criarControleSeletor({
   }
 });
 seletor.controle.addTo(map);
-// Expor função de atualização de timestamp para carregarCamadaRisco() usar (D-08)
 atualizarTimestamp = seletor.atualizarTimestamp;
+
+criarControleHeatmap({
+  inicialmenteAtivo: true,
+  onToggle(ativo) {
+    if (ativo) {
+      carregarHeatmap();
+    } else {
+      removerHeatmap(map, state.heatmap);
+      if (_legendaHeatmapCtrl) { map.removeControl(_legendaHeatmapCtrl); _legendaHeatmapCtrl = null; }
+    }
+  }
+}).addTo(map);
+
+// Legenda do heatmap — controle Leaflet injetado uma única vez
+let _legendaHeatmapCtrl = null;
+
+function normNome(s) {
+  return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+
+async function carregarHeatmap() {
+  try {
+    const { pontos, bairros, total } = await api.heatmapOcorrencias();
+    renderizarHeatmap(map, pontos, state.heatmap);
+
+    // Correlação: dos top-10 bairros históricos, quantos têm score > 50 agora?
+    let correlacaoHtml = '';
+    try {
+      const riscos = await api.riscos(state.horizonteAtivo);
+      const scoreMap = new Map((riscos.scores || []).map(s => [normNome(s.bairro), Number(s.score)]));
+      const top10 = bairros.slice(0, 10);
+      const coincidentes = top10.filter(b => (scoreMap.get(normNome(b.bairro)) || 0) > 50).length;
+      correlacaoHtml = `<div style="margin-top:8px;font-size:.72rem;color:#ffd700;font-weight:600">
+        ${coincidentes} de ${top10.length} bairros mais afetados historicamente<br>estão em zona de risco ≥ Laranja agora
+      </div>`;
+    } catch (_) {}
+
+    // Top-3 bairros
+    const top3 = bairros.slice(0, 3).map(b => `<span style="display:flex;justify-content:space-between"><span>${b.bairro}</span><strong>${b.count}</strong></span>`).join('');
+
+    if (_legendaHeatmapCtrl) map.removeControl(_legendaHeatmapCtrl);
+    const LegendaCtrl = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd() {
+        const div = L.DomUtil.create('div');
+        div.style.cssText = 'background:rgba(15,23,42,.88);color:#e2e8f0;padding:10px 13px;border-radius:8px;font-size:.75rem;min-width:190px;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.4)';
+        div.innerHTML = `
+          <div style="font-weight:700;margin-bottom:6px;font-size:.8rem">🔥 Histórico 2021–2024</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div style="width:100px;height:10px;border-radius:4px;background:linear-gradient(to right,#ffe066,#ff8c00,#e63c00,#7c0000)"></div>
+            <span style="font-size:.68rem;color:#94a3b8">baixo → crítico</span>
+          </div>
+          <div style="font-size:.7rem;color:#94a3b8;margin-bottom:6px">Total: <strong style="color:#e2e8f0">${total} ocorrências</strong></div>
+          <div style="font-size:.72rem;border-top:1px solid #334155;padding-top:6px;display:flex;flex-direction:column;gap:2px">${top3}</div>
+          ${correlacaoHtml}`;
+        L.DomEvent.disableClickPropagation(div);
+        return div;
+      }
+    });
+    _legendaHeatmapCtrl = new LegendaCtrl();
+    _legendaHeatmapCtrl.addTo(map);
+  } catch (e) {
+    console.error('Erro ao carregar heatmap histórico', e);
+  }
+}
 
 map.on('click', (e) => {
   const { lat, lng } = e.latlng;
@@ -1378,9 +1443,8 @@ document.getElementById('sel-alert-hours').addEventListener('change', async (e) 
 
 // ── Init ─────────────────────────────────────────────────
 carregarStats();
-// D-03: modo padrão é 'risco' — NÃO chamar carregarMapa() no startup para evitar estado misto (D-04)
-// carregarMapa() só é chamado quando o usuário clica [Ocorrências] no toggle
-carregarCamadaRisco(); // carrega choropleth no startup (modo padrão: risco)
+carregarCamadaRisco();
+carregarHeatmap();
 carregarSessao().then(() => verificarAlertasPendentes()); // D-05: verificar alertas ao carregar
 
 // Verificar staleness da previsão meteorológica ao carregar

@@ -26,6 +26,9 @@ export const api = {
   ocorrenciasRecentes: (horas = 24) =>
     request(`/ocorrencias/recentes?horas=${horas}`),
 
+  heatmapOcorrencias: () =>
+    request('/ocorrencias/heatmap'),
+
   estatisticas: () =>
     request('/ocorrencias/stats'),
 
