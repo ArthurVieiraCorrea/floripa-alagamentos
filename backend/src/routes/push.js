@@ -104,7 +104,7 @@ router.patch('/alert-hours', requireAuth, (req, res) => {
 // POST /api/push/test — dispara notificação de teste imediata para o usuário autenticado
 router.post('/test', requireAuth, async (req, res) => {
   const db = getDb();
-  const row = db.selectOne(
+  const row = db.get(
     'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE usuario_id = ? LIMIT 1',
     [req.session.userId]
   );
