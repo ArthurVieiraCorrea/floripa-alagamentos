@@ -1,5 +1,9 @@
 # Floripa Alagamentos
 
+> Projeto desenvolvido por **Arthur Vieira Correa** durante o **Ipe Village** — uma popup city em Florianópolis, SC, onde builders, desenvolvedores e makers se reúnem para construir projetos reais em comunidade.
+>
+> Feito inteiramente com **vibe coding** — construído de forma iterativa com auxílio de IA, ideia por ideia, funcionalidade por funcionalidade.
+
 Sistema de monitoramento e previsão de alagamentos em Florianópolis — mapa interativo de risco com dados meteorológicos em tempo real, alertas push e integração com Google Calendar.
 
 ## Pré-requisitos
