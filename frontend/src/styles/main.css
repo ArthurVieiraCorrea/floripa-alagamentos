@@ -1,26 +1,7 @@
+@import './tokens.css';
+
 /* ── Reset & base ─────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface2: #263549;
-  --border: #334155;
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --accent: #3b82f6;
-
-  --baixo:   #22c55e;
-  --medio:   #f59e0b;
-  --alto:    #ef4444;
-  --critico: #7c3aed;
-
-  --risco-verde:     #22c55e;
-  --risco-amarelo:   #f59e0b;
-  --risco-laranja:   #f97316;
-  --risco-vermelho:  #ef4444;
-  --risco-sem-dados: #cbd5e1;
-}
 
 html, body { height: 100%; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
 

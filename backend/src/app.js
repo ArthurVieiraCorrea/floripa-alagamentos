@@ -87,9 +87,25 @@ app.get('/api/health', (req, res) => {
 const frontendDist = path.join(__dirname, '../../frontend/dist');
 const fs = require('fs');
 app.use(express.static(frontendDist));
+
+// Rota explícita para o app — deve vir antes do catch-all
+// Build multi-page: o app fica em dist/index.html (entry point raiz)
+app.get('/app', (req, res) => {
+  const appPath = path.join(frontendDist, 'index.html');
+  if (fs.existsSync(appPath)) {
+    res.sendFile(appPath);
+  } else {
+    res.status(404).json({ erro: 'App não compilado. Execute: cd frontend && npm run build' });
+  }
+});
+
+// Catch-all serve a landing page (dist/src/pages/landing.html)
 app.get('*', (req, res) => {
-  const indexPath = path.join(frontendDist, 'index.html');
-  if (fs.existsSync(indexPath)) {
+  const landingPath = path.join(frontendDist, 'src/pages/landing.html');
+  const indexPath   = path.join(frontendDist, 'index.html');
+  if (fs.existsSync(landingPath)) {
+    res.sendFile(landingPath);
+  } else if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
     res.status(404).json({ erro: 'Frontend não compilado. Execute: cd frontend && npm run build' });
